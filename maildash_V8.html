@@ -1,0 +1,2853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MailMind — AI Email Agent</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #f7f5f0;
+  --bg2:       #ede9e1;
+  --surface:   #ffffff;
+  --surface2:  #faf8f4;
+  --border:    #e8e3d9;
+  --border2:   #d6cfc2;
+  --accent:    #e67e22;
+  --accent-h:  #d35400;
+  --accent-lt: #fef0e3;
+  --accent-md: #fbd9b8;
+  --green:     #27ae60;
+  --green-lt:  #e8f5ec;
+  --blue:      #2980b9;
+  --blue-lt:   #e3f0fb;
+  --purple:    #8e44ad;
+  --purple-lt: #f3e8ff;
+  --red:       #e74c3c;
+  --red-lt:    #fdecea;
+  --amber:     #f39c12;
+  --amber-lt:  #fef3cd;
+  --text:      #1a1814;
+  --text2:     #6b6358;
+  --text3:     #a89e93;
+  --mono:      'JetBrains Mono', monospace;
+  --serif:     'Fraunces', serif;
+  --sans:      'DM Sans', sans-serif;
+  --sidebar-w: 240px;
+  --r:         12px;
+  --r-lg:      16px;
+}
+
+html, body { height: 100%; overflow: hidden; }
+body { font-family: var(--sans); background: var(--bg); color: var(--text); display: flex; }
+
+/* ─── SCROLLBARS ─── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+/* ─── SIDEBAR ─── */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  flex-shrink: 0; overflow: hidden;
+}
+
+.sidebar-logo {
+  display: flex; align-items: center; gap: 10px;
+  padding: 22px 20px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.logo-mark {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.logo-mark svg { width: 18px; height: 18px; }
+.logo-text { font-family: var(--serif); font-size: 18px; font-weight: 700; letter-spacing: -0.3px; color: var(--text); }
+.logo-text em { color: var(--accent); font-style: normal; }
+
+.sidebar-section { padding: 18px 12px 0; }
+.sidebar-label {
+  font-size: 9px; font-weight: 600; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--text3);
+  padding: 0 8px; margin-bottom: 6px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; border-radius: 9px;
+  font-size: 13px; font-weight: 500; color: var(--text2);
+  cursor: pointer; transition: all 0.15s; margin-bottom: 1px;
+  position: relative;
+}
+.nav-item:hover { background: var(--bg); color: var(--text); }
+.nav-item.active { background: var(--accent-lt); color: var(--accent); font-weight: 600; }
+.nav-item.active .nav-icon { color: var(--accent); }
+.nav-icon { font-size: 15px; width: 18px; text-align: center; flex-shrink: 0; }
+.nav-badge {
+  margin-left: auto; background: var(--accent); color: #fff;
+  font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 10px;
+  font-family: var(--mono);
+}
+.nav-badge.green { background: var(--green); }
+
+/* MODEL PICKER in sidebar */
+.model-section { padding: 16px 12px; border-top: 1px solid var(--border); margin-top: auto; }
+.model-section-title {
+  font-size: 9px; font-weight: 600; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--text3);
+  padding: 0 4px; margin-bottom: 10px;
+}
+.model-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+.model-chip {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 9px; border-radius: 9px;
+  border: 1px solid var(--border); background: var(--bg);
+  font-size: 11px; font-weight: 500; color: var(--text2);
+  cursor: pointer; transition: all 0.15s; font-family: var(--sans);
+}
+.model-chip:hover { border-color: var(--border2); color: var(--text); }
+.model-chip.active { background: var(--text); color: #fff; border-color: var(--text); }
+.model-chip.active .mdot { background: #fff !important; }
+.mdot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+.sidebar-user {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 16px; border-top: 1px solid var(--border);
+}
+.user-av {
+  width: 32px; height: 32px; border-radius: 9px;
+  background: var(--accent-lt); display: flex; align-items: center;
+  justify-content: center; font-size: 12px; font-weight: 700;
+  color: var(--accent); flex-shrink: 0;
+}
+.user-name { font-size: 12px; font-weight: 600; color: var(--text); }
+.user-role { font-size: 10px; color: var(--text3); font-family: var(--mono); }
+
+/* ─── MAIN ─── */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--bg); }
+
+/* TOPBAR */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 28px; border-bottom: 1px solid var(--border);
+  background: var(--surface); flex-shrink: 0;
+}
+.topbar-left {}
+.breadcrumb { font-size: 11px; color: var(--text3); font-family: var(--mono); margin-bottom: 2px; }
+.page-title { font-family: var(--serif); font-size: 22px; font-weight: 700; letter-spacing: -0.4px; color: var(--text); }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+.search-wrap {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 9px; padding: 8px 14px;
+  font-size: 12px; color: var(--text3);
+  min-width: 200px; cursor: text;
+}
+.topbar-btn {
+  width: 36px; height: 36px; border-radius: 9px;
+  background: var(--bg); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text2); font-size: 15px;
+  transition: all 0.15s;
+}
+.topbar-btn:hover { border-color: var(--border2); color: var(--text); background: var(--surface); }
+.active-model-pill {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 9px;
+  background: var(--accent-lt); border: 1px solid var(--accent-md);
+  font-size: 11px; font-weight: 600; color: var(--accent);
+}
+
+/* CONTENT */
+.content { flex: 1; overflow-y: auto; padding: 24px 28px; }
+
+/* ─── STAT ROW ─── */
+.stat-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 22px; }
+.stat-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: 18px 20px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  animation: up 0.4s ease both;
+}
+.stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
+@keyframes up { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
+.stat-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.stat-label { font-size: 10px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text3); }
+.stat-icon-wrap {
+  width: 30px; height: 30px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center; font-size: 14px;
+}
+.stat-num { font-family: var(--serif); font-size: 28px; font-weight: 700; letter-spacing: -1px; margin-bottom: 6px; color: var(--text); }
+.stat-sub { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px; font-family: var(--mono); }
+.sub-up { background: var(--green-lt); color: var(--green); }
+.sub-dn { background: var(--red-lt); color: var(--red); }
+.sub-nu { background: var(--bg); color: var(--text3); }
+
+/* ─── MID LAYOUT ─── */
+.mid-layout { display: grid; grid-template-columns: 1fr 340px; gap: 16px; margin-bottom: 20px; }
+
+/* EMAIL TABLE CARD */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-lg); overflow: hidden;
+  animation: up 0.45s ease both;
+}
+.card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+}
+.card-title { font-size: 14px; font-weight: 700; color: var(--text); }
+.card-sub-label { font-size: 11px; color: var(--text3); margin-top: 1px; font-family: var(--mono); }
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: 9px; border: none;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  font-family: var(--sans); transition: all 0.15s; white-space: nowrap;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent-h); box-shadow: 0 4px 12px rgba(230,126,34,0.3); }
+.btn-ghost { background: var(--bg); border: 1px solid var(--border); color: var(--text2); }
+.btn-ghost:hover { border-color: var(--border2); color: var(--text); }
+.btn-sm { padding: 5px 10px; font-size: 11px; border-radius: 7px; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Loading bar */
+.load-strip { height: 2px; background: var(--border); position: relative; overflow: hidden; display: none; }
+.load-fill {
+  position: absolute; top:0; left:-60%; width:60%; height:100%;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  animation: lslide 1s ease infinite;
+}
+@keyframes lslide { to { left: 100%; } }
+
+/* TABLE */
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  padding: 10px 16px; text-align: left;
+  font-size: 9px; font-weight: 700; letter-spacing: 1.8px;
+  text-transform: uppercase; color: var(--text3);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+}
+tbody tr {
+  border-bottom: 1px solid rgba(0,0,0,0.04);
+  cursor: pointer; transition: background 0.12s;
+  animation: up 0.35s ease both;
+}
+tbody tr:hover { background: var(--bg); }
+tbody tr.sel-row { background: var(--accent-lt); }
+tbody td { padding: 12px 16px; font-size: 13px; max-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+/* AVATAR */
+.av {
+  width: 32px; height: 32px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; flex-shrink: 0; letter-spacing: 0.3px;
+}
+.av-wrap { display: flex; align-items: center; gap: 10px; }
+.av-name { font-weight: 600; font-size: 13px; }
+
+.td-av { width: 170px; }
+.td-subj { font-weight: 500; }
+.td-prev { color: var(--text3); font-size: 12px; font-weight: 400; }
+.td-time { width: 80px; font-family: var(--mono); font-size: 10px; color: var(--text3); }
+.td-status { width: 80px; }
+.td-act { width: 100px; }
+
+.pill { display: inline-flex; align-items: center; gap: 3px; padding: 3px 9px; border-radius: 20px; font-size: 10px; font-weight: 600; font-family: var(--mono); }
+.pill-new { background: var(--accent-lt); color: var(--accent); }
+.pill-read { background: var(--bg2); color: var(--text3); }
+.pill-sent { background: var(--green-lt); color: var(--green); }
+
+/* ─── DETAIL PANEL ─── */
+.detail-panel { display: flex; flex-direction: column; }
+.detail-inner { padding: 0 18px 18px; flex:1; overflow-y:auto; }
+
+.detail-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 50px 20px; gap: 10px; color: var(--text3); }
+.detail-empty .big-icon { font-size: 36px; opacity: 0.3; }
+.detail-empty p { font-size: 12px; text-align: center; line-height: 1.6; font-family: var(--mono); }
+
+.meta-grid { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; margin-bottom: 12px; padding: 14px 0 12px; border-bottom: 1px solid var(--border); }
+.mg-k { font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text3); align-self: center; }
+.mg-v { font-size: 12px; color: var(--text); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.detail-subject { font-family: var(--serif); font-size: 16px; font-weight: 700; color: var(--text); margin: 12px 0 10px; line-height: 1.3; }
+.body-box {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px;
+  font-family: var(--mono); font-size: 11px; line-height: 1.75;
+  color: var(--text2); max-height: 120px; overflow-y: auto;
+  white-space: pre-wrap; word-break: break-word; margin-bottom: 14px;
+}
+.analyze-btn-big {
+  width: 100%; padding: 10px; border-radius: 10px; border: none;
+  background: var(--accent); color: #fff;
+  font-size: 13px; font-weight: 700; cursor: pointer;
+  font-family: var(--sans); transition: all 0.15s;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.analyze-btn-big:hover { background: var(--accent-h); box-shadow: 0 4px 14px rgba(230,126,34,0.3); }
+
+/* AI section */
+.section-divider {
+  display: flex; align-items: center; gap: 8px;
+  margin: 14px 0 10px; font-size: 9px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase; color: var(--accent);
+}
+.section-divider::after { content:''; flex:1; height:1px; background: var(--accent-md); }
+.section-divider::before { content:''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink:0; }
+
+.tag-row { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
+.tag { padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 600; font-family: var(--mono); }
+.t-intent { background: var(--purple-lt); color: var(--purple); }
+.t-pos { background: var(--green-lt); color: var(--green); }
+.t-neu { background: var(--bg2); color: var(--text3); }
+.t-urg { background: var(--amber-lt); color: var(--amber); }
+.t-neg { background: var(--red-lt); color: var(--red); }
+.t-hi { background: var(--red-lt); color: var(--red); }
+.t-lo { background: var(--bg2); color: var(--text3); }
+.t-md { background: var(--blue-lt); color: var(--blue); }
+
+.analysis-box {
+  background: var(--accent-lt); border: 1px solid var(--accent-md);
+  border-radius: 10px; padding: 12px;
+  font-size: 12px; color: #7a4010; line-height: 1.65; margin-bottom: 12px;
+}
+.model-used-tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 10px; font-weight: 600; font-family: var(--mono);
+  color: var(--text3); margin-bottom: 10px;
+  padding: 3px 8px; background: var(--bg2); border-radius: 5px;
+}
+
+.draft-area {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px;
+  font-family: var(--mono); font-size: 11px; line-height: 1.75;
+  color: var(--text); resize: vertical; min-height: 110px;
+  outline: none; transition: border-color 0.15s;
+}
+.draft-area:focus { border-color: var(--accent); }
+.draft-actions { display: flex; gap: 6px; margin-top: 10px; }
+.draft-actions .btn { flex: 1; justify-content: center; }
+
+/* ─── ATTACHMENTS ─── */
+.attach-section { margin: 10px 0 12px; }
+.attach-label {
+  font-size: 9px; font-weight: 700; letter-spacing: 1.8px;
+  text-transform: uppercase; color: var(--text3); margin-bottom: 6px;
+  display: flex; align-items: center; gap: 6px;
+}
+.attach-list { display: flex; flex-direction: column; gap: 5px; }
+.attach-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border-radius: 9px;
+  background: var(--surface2); border: 1px solid var(--border);
+  cursor: pointer; transition: all 0.15s; position: relative;
+}
+.attach-item:hover { border-color: var(--accent); background: var(--accent-lt); }
+.attach-item.analyzing { border-color: var(--accent); background: var(--accent-lt); }
+.attach-item.analyzed { border-color: var(--green); background: var(--green-lt); }
+.attach-icon {
+  width: 28px; height: 28px; border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; flex-shrink: 0;
+}
+.attach-icon.pdf  { background: #fdecea; color: var(--red); }
+.attach-icon.img  { background: var(--blue-lt); color: var(--blue); }
+.attach-icon.doc  { background: var(--blue-lt); color: var(--blue); }
+.attach-icon.xls  { background: var(--green-lt); color: var(--green); }
+.attach-icon.txt  { background: var(--bg2); color: var(--text2); }
+.attach-icon.other { background: var(--bg2); color: var(--text3); }
+.attach-info { flex: 1; min-width: 0; }
+.attach-name { font-size: 11px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.attach-meta { font-size: 10px; color: var(--text3); font-family: var(--mono); }
+.attach-badge {
+  font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 20px;
+  font-family: var(--mono); white-space: nowrap; flex-shrink: 0;
+}
+.attach-badge.pending { background: var(--bg2); color: var(--text3); }
+.attach-badge.loading { background: var(--accent-lt); color: var(--accent); }
+.attach-badge.done    { background: var(--green-lt); color: var(--green); }
+
+.attach-analysis {
+  background: var(--blue-lt); border: 1px solid #b3d4f0;
+  border-radius: 9px; padding: 11px; margin-top: 6px;
+  font-size: 11px; color: #1a4a70; line-height: 1.65;
+  display: none;
+}
+.attach-analysis.show { display: block; }
+.attach-analysis-title {
+  font-size: 9px; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; color: var(--blue); margin-bottom: 6px;
+  display: flex; align-items: center; gap: 5px;
+}
+
+/* Upload drop zone */
+.drop-zone {
+  border: 2px dashed var(--border2); border-radius: 10px;
+  padding: 14px; text-align: center; cursor: pointer;
+  transition: all 0.2s; margin: 8px 0;
+  font-size: 11px; color: var(--text3); font-family: var(--mono);
+}
+.drop-zone:hover, .drop-zone.drag-over {
+  border-color: var(--accent); background: var(--accent-lt); color: var(--accent);
+}
+.drop-zone input[type=file] { display: none; }
+.drop-zone-icon { font-size: 20px; margin-bottom: 4px; opacity: 0.5; }
+
+/* Thinking */
+.thinking { display: flex; align-items: center; gap: 8px; padding: 20px 0; color: var(--text3); font-family: var(--mono); font-size: 11px; }
+.dots span { display: inline-block; width: 5px; height: 5px; background: var(--accent); border-radius: 50%; opacity: 0.3; animation: blink 1.2s infinite; }
+.dots span:nth-child(2) { animation-delay: 0.2s; }
+.dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes blink { 0%,80%,100%{opacity:0.3;} 40%{opacity:1;} }
+
+/* Sent */
+.sent-wrap { text-align: center; padding: 30px 10px; }
+.sent-icon { font-size: 40px; margin-bottom: 8px; }
+.sent-title { font-family: var(--serif); font-size: 16px; font-weight: 700; color: var(--green); margin-bottom: 4px; }
+.sent-sub { font-family: var(--mono); font-size: 11px; color: var(--text3); }
+
+/* ─── BOTTOM ROW ─── */
+.bottom-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+/* BAR CHART */
+.bars-area { padding: 16px 20px 14px; }
+.bar-wrap { display: flex; align-items: flex-end; gap: 4px; height: 80px; margin-bottom: 6px; }
+.bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.bar-fill {
+  width: 100%; border-radius: 4px 4px 0 0;
+  background: var(--accent); transition: height 0.8s cubic-bezier(.34,1.4,.64,1);
+  min-height: 4px; position: relative; overflow: hidden;
+}
+.bar-fill::after { content:''; position:absolute; inset:0; background: rgba(255,255,255,0.25); opacity:0; transition: opacity 0.15s; }
+.bar-col:hover .bar-fill::after { opacity:1; }
+.bar-fill.alt { background: var(--amber); }
+.bar-fill.hi { background: var(--green); }
+.bar-lbl { font-size: 9px; font-family: var(--mono); color: var(--text3); }
+
+/* SENDER BARS */
+.sender-list { padding: 0 18px 16px; display: flex; flex-direction: column; gap: 12px; }
+.sender-item {}
+.sender-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+.sender-name { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 500; }
+.sender-av { width: 20px; height: 20px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 700; flex-shrink: 0; }
+.sender-pct { font-family: var(--mono); font-size: 11px; color: var(--text3); }
+.prog-track { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.prog-fill { height: 100%; border-radius: 3px; transition: width 1s cubic-bezier(.34,1.4,.64,1); }
+
+/* STATUS LIST */
+.status-list { padding: 0 18px 16px; }
+.status-item { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid rgba(0,0,0,0.04); }
+.status-item:last-child { border: none; }
+.status-left { display: flex; align-items: center; gap: 8px; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; }
+.status-name { font-size: 12px; font-weight: 500; color: var(--text); }
+.status-count { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--accent); }
+
+/* ─── GUARDRAIL STYLES ─── */
+.guardrail-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 10px; font-weight: 600; font-family: var(--mono);
+  padding: 3px 9px; border-radius: 6px; margin-bottom: 8px;
+}
+.guardrail-badge.input  { background: var(--amber-lt); color: #7a5a00; border: 1px solid #f0c860; }
+.guardrail-badge.output { background: var(--blue-lt);  color: #1a4a80; border: 1px solid #b3d4f0; }
+.guardrail-badge.block  { background: var(--red-lt);   color: var(--red); border: 1px solid #f5b3ae; }
+.guardrail-log {
+  position: fixed; bottom: 60px; right: 24px; width: 330px; max-height: 280px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); box-shadow: 0 8px 28px rgba(0,0,0,0.13);
+  overflow: hidden; display: none; flex-direction: column; z-index: 1000;
+  animation: up 0.2s ease;
+}
+.guardrail-log.open { display: flex; }
+.guardrail-log-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; border-bottom: 1px solid var(--border);
+  background: var(--surface2); flex-shrink: 0;
+}
+.guardrail-log-title { font-size: 11px; font-weight: 700; color: var(--text); }
+.guardrail-log-close { font-size: 16px; cursor: pointer; color: var(--text3); line-height: 1; }
+.guardrail-log-close:hover { color: var(--text); }
+.guardrail-log-body { overflow-y: auto; flex: 1; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+.guardrail-entry {
+  font-size: 10px; font-family: var(--mono); line-height: 1.55;
+  padding: 7px 9px; border-radius: 7px; border-left: 3px solid;
+}
+.guardrail-entry.pass  { background: var(--green-lt);  border-color: var(--green);  color: #145a32; }
+.guardrail-entry.warn  { background: var(--amber-lt);  border-color: var(--amber);  color: #7a5a00; }
+.guardrail-entry.block { background: var(--red-lt);    border-color: var(--red);    color: #7b241c; }
+.guardrail-entry.info  { background: var(--blue-lt);   border-color: var(--blue);   color: #1a4a80; }
+.guardrail-counter {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: 9px; cursor: pointer;
+  background: var(--surface2); border: 1px solid var(--border);
+  font-size: 11px; font-weight: 600; color: var(--text2);
+  transition: all 0.15s;
+}
+.guardrail-counter:hover { border-color: var(--border2); color: var(--text); }
+.gr-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+.gr-dot.warn  { background: var(--amber); }
+.gr-dot.block { background: var(--red); }
+
+/* TOAST */
+#toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--text); color: #fff;
+  border-radius: 10px; padding: 12px 18px;
+  font-size: 12px; font-family: var(--mono);
+  transform: translateY(70px); opacity: 0;
+  transition: all 0.3s; z-index: 999;
+  pointer-events: none; box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+#toast.show { transform: none; opacity: 1; }
+#toast.ok { background: var(--green); }
+#toast.err { background: var(--red); }
+
+/* Empty state */
+.empty-state { text-align: center; padding: 44px 20px; color: var(--text3); font-family: var(--mono); font-size: 12px; }
+.empty-icon { font-size: 32px; margin-bottom: 8px; opacity: 0.3; }
+
+@media (max-width: 1200px) {
+  .stat-row { grid-template-columns: repeat(2,1fr); }
+  .mid-layout { grid-template-columns: 1fr; }
+  .bottom-row { grid-template-columns: 1fr 1fr; }
+}
+
+/* ─── PAGE SYSTEM ─── */
+.page { display: none; flex-direction: column; gap: 0; }
+.page.active { display: flex; }
+
+/* ─── SENT PAGE ─── */
+.sent-page-grid { display: flex; flex-direction: column; gap: 14px; }
+.sent-email-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 16px 20px;
+  display: flex; align-items: flex-start; gap: 14px;
+  transition: box-shadow 0.2s, transform 0.2s;
+  animation: up 0.35s ease both;
+}
+.sent-email-card:hover { box-shadow: 0 4px 18px rgba(0,0,0,0.06); transform: translateY(-1px); }
+.sent-av-wrap { flex-shrink: 0; }
+.sent-body { flex: 1; min-width: 0; }
+.sent-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
+.sent-to { font-size: 13px; font-weight: 600; color: var(--text); }
+.sent-date { font-size: 10px; font-family: var(--mono); color: var(--text3); flex-shrink: 0; margin-left: 12px; }
+.sent-subject { font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 6px; }
+.sent-draft-preview {
+  background: var(--green-lt); border: 1px solid #b2dfc0;
+  border-radius: 8px; padding: 10px 12px;
+  font-family: var(--mono); font-size: 11px; line-height: 1.7;
+  color: #1a5c2e; max-height: 70px; overflow: hidden;
+  position: relative;
+}
+.sent-draft-preview::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+  height: 24px; background: linear-gradient(transparent, var(--green-lt));
+}
+.sent-status-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.sent-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 9px; border-radius: 20px;
+  font-size: 10px; font-weight: 600; font-family: var(--mono);
+  background: var(--green-lt); color: var(--green);
+}
+.sent-model-tag {
+  font-size: 10px; font-family: var(--mono); color: var(--text3);
+  padding: 3px 8px; background: var(--bg2); border-radius: 5px;
+}
+.sent-empty {
+  text-align: center; padding: 60px 20px; color: var(--text3);
+  font-family: var(--mono); font-size: 12px;
+}
+.sent-empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.25; }
+
+
+
+/* ─── AI DRAFTS PAGE ─── */
+.drafts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.draft-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 18px 20px;
+  animation: up 0.35s ease both;
+  display: flex; flex-direction: column; gap: 10px;
+  transition: box-shadow 0.2s;
+}
+.draft-card:hover { box-shadow: 0 4px 18px rgba(0,0,0,0.07); }
+.draft-card-header { display: flex; align-items: center; gap: 10px; }
+.draft-card-meta { flex: 1; min-width: 0; }
+.draft-card-from { font-size: 12px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.draft-card-subj { font-size: 11px; color: var(--text3); font-family: var(--mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px; }
+.draft-card-tags { display: flex; gap: 5px; flex-wrap: wrap; }
+.draft-card-body {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 12px;
+  font-family: var(--mono); font-size: 11px; line-height: 1.7;
+  color: var(--text2); max-height: 80px; overflow: hidden;
+  position: relative;
+}
+.draft-card-body::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+  height: 20px; background: linear-gradient(transparent, var(--surface2));
+}
+.draft-card-actions { display: flex; gap: 6px; }
+.draft-card-actions .btn { flex: 1; justify-content: center; }
+.drafts-empty {
+  grid-column: 1 / -1; text-align: center; padding: 60px 20px;
+  color: var(--text3); font-family: var(--mono); font-size: 12px;
+}
+.drafts-empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.25; }
+
+/* ─── ANALYZED PAGE ─── */
+.analyzed-grid { display: flex; flex-direction: column; gap: 14px; }
+.analyzed-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); overflow: hidden;
+  animation: up 0.35s ease both;
+}
+.analyzed-card-top {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 20px; border-bottom: 1px solid var(--border);
+  cursor: pointer; transition: background 0.15s;
+}
+.analyzed-card-top:hover { background: var(--bg); }
+.analyzed-card-info { flex: 1; min-width: 0; }
+.analyzed-card-from { font-size: 13px; font-weight: 600; color: var(--text); }
+.analyzed-card-subj { font-size: 12px; color: var(--text2); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.analyzed-card-date { font-size: 10px; font-family: var(--mono); color: var(--text3); flex-shrink: 0; }
+.analyzed-card-body { padding: 14px 20px; display: none; }
+.analyzed-card-body.open { display: block; }
+.analyzed-card-chevron {
+  font-size: 12px; color: var(--text3); transition: transform 0.2s;
+  flex-shrink: 0; margin-left: 4px;
+}
+.analyzed-card-top.open .analyzed-card-chevron { transform: rotate(180deg); }
+.analyzed-empty {
+  text-align: center; padding: 60px 20px;
+  color: var(--text3); font-family: var(--mono); font-size: 12px;
+}
+.analyzed-empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.25; }
+
+/* ─── GUARDRAILS PAGE ─── */
+.guardrails-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
+.gr-stat-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: 18px 20px;
+  display: flex; align-items: center; gap: 14px;
+  animation: up 0.4s ease both;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.gr-stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
+.gr-stat-icon {
+  width: 42px; height: 42px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.gr-stat-num { font-family: var(--serif); font-size: 28px; font-weight: 700; letter-spacing: -1px; color: var(--text); line-height: 1; }
+.gr-stat-label { font-size: 10px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text3); margin-top: 3px; }
+
+.gr-layout { display: grid; grid-template-columns: 1fr 320px; gap: 16px; }
+
+/* Rule list */
+.gr-rules-grid { display: flex; flex-direction: column; gap: 10px; }
+.gr-rule-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 16px 20px;
+  display: flex; align-items: flex-start; gap: 14px;
+  animation: up 0.35s ease both;
+  transition: box-shadow 0.2s;
+}
+.gr-rule-card:hover { box-shadow: 0 4px 18px rgba(0,0,0,0.06); }
+.gr-rule-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+}
+.gr-rule-info { flex: 1; min-width: 0; }
+.gr-rule-name { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+.gr-rule-desc { font-size: 11px; color: var(--text3); font-family: var(--mono); line-height: 1.55; }
+.gr-rule-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+.gr-rule-type { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; }
+.gr-rule-type.input  { background: var(--amber-lt); color: #7a5a00; }
+.gr-rule-type.output { background: var(--blue-lt); color: #1a4a80; }
+.gr-rule-type.both   { background: var(--purple-lt); color: var(--purple); }
+.gr-rule-count { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--text3); }
+.gr-rule-toggle {
+  width: 34px; height: 18px; border-radius: 9px;
+  background: var(--green); position: relative; cursor: pointer;
+  transition: background 0.2s; flex-shrink: 0;
+}
+.gr-rule-toggle::after {
+  content: ''; position: absolute; top: 2px; left: 2px;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: #fff; transition: left 0.2s;
+}
+.gr-rule-toggle.off { background: var(--border2); }
+.gr-rule-toggle.off::after { left: 18px; }
+
+/* Live log sidebar */
+.gr-live-log { display: flex; flex-direction: column; gap: 0; }
+.gr-live-log-inner { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 6px; max-height: 480px; overflow-y: auto; }
+.gr-log-entry {
+  font-size: 10px; font-family: var(--mono); line-height: 1.55;
+  padding: 7px 9px; border-radius: 7px; border-left: 3px solid;
+  animation: up 0.25s ease both;
+}
+.gr-log-entry.pass  { background: var(--green-lt);  border-color: var(--green);  color: #145a32; }
+.gr-log-entry.warn  { background: var(--amber-lt);  border-color: var(--amber);  color: #7a5a00; }
+.gr-log-entry.block { background: var(--red-lt);    border-color: var(--red);    color: #7b241c; }
+.gr-log-entry.info  { background: var(--blue-lt);   border-color: var(--blue);   color: #1a4a80; }
+.gr-log-ts { font-weight: 700; margin-right: 4px; opacity: 0.7; }
+.gr-log-badge { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 9px; font-weight: 700; margin-right: 5px; }
+.gr-log-badge.pass  { background: var(--green);  color: #fff; }
+.gr-log-badge.warn  { background: var(--amber);  color: #fff; }
+.gr-log-badge.block { background: var(--red);    color: #fff; }
+.gr-empty-log { text-align: center; padding: 30px 10px; color: var(--text3); font-family: var(--mono); font-size: 11px; }
+
+
+.dash-hero {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px;
+}
+.dash-hero-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: 20px 22px;
+  animation: up 0.4s ease both;
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: default;
+}
+.dash-hero-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.07); }
+.dash-hero-icon {
+  width: 38px; height: 38px; border-radius: 11px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; margin-bottom: 14px;
+}
+.dash-hero-num {
+  font-family: var(--serif); font-size: 32px; font-weight: 700;
+  letter-spacing: -1.5px; color: var(--text); line-height: 1;
+  margin-bottom: 4px;
+}
+.dash-hero-label {
+  font-size: 11px; font-weight: 600; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--text3); margin-bottom: 8px;
+}
+.dash-hero-trend {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 600; font-family: var(--mono);
+  padding: 3px 9px; border-radius: 20px;
+}
+.dash-mid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+.dash-bottom { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+/* Activity Feed */
+.activity-feed { padding: 0 18px 16px; display: flex; flex-direction: column; gap: 0; }
+.activity-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 11px 0; border-bottom: 1px solid rgba(0,0,0,0.04);
+  animation: up 0.3s ease both;
+}
+.activity-item:last-child { border: none; }
+.activity-dot-wrap { display: flex; flex-direction: column; align-items: center; padding-top: 3px; }
+.activity-dot {
+  width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
+}
+.activity-line { width: 1px; flex: 1; background: var(--border); margin-top: 4px; min-height: 14px; }
+.activity-item:last-child .activity-line { display: none; }
+.activity-content { flex: 1; min-width: 0; }
+.activity-text { font-size: 12px; color: var(--text); line-height: 1.45; }
+.activity-text strong { color: var(--text); font-weight: 600; }
+.activity-time { font-size: 10px; font-family: var(--mono); color: var(--text3); margin-top: 2px; }
+
+/* Priority Queue */
+.priority-list { padding: 0 18px 16px; display: flex; flex-direction: column; gap: 8px; }
+.priority-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 10px;
+  background: var(--surface2); border: 1px solid var(--border);
+  cursor: pointer; transition: all 0.15s;
+  animation: up 0.35s ease both;
+}
+.priority-item:hover { border-color: var(--accent); background: var(--accent-lt); }
+.priority-info { flex: 1; min-width: 0; }
+.priority-from { font-size: 12px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.priority-subj { font-size: 11px; color: var(--text3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 1px; }
+.priority-indicator {
+  width: 4px; border-radius: 2px; flex-shrink: 0; align-self: stretch;
+}
+
+/* Donut chart */
+.dash-donut-wrap { display: flex; align-items: center; justify-content: center; gap: 24px; padding: 16px 20px 18px; }
+.donut-svg { flex-shrink: 0; }
+.donut-legend { display: flex; flex-direction: column; gap: 9px; }
+.donut-legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.donut-legend-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.donut-legend-label { color: var(--text2); font-weight: 500; }
+.donut-legend-val { font-family: var(--mono); font-size: 11px; color: var(--text3); margin-left: auto; padding-left: 12px; }
+
+/* AI Performance */
+.perf-list { padding: 0 18px 16px; display: flex; flex-direction: column; gap: 12px; }
+.perf-item {}
+.perf-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+.perf-label { font-size: 12px; font-weight: 500; color: var(--text); }
+.perf-val { font-family: var(--mono); font-size: 11px; font-weight: 600; }
+.perf-track { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.perf-fill { height: 100%; border-radius: 3px; transition: width 1.2s cubic-bezier(.34,1.4,.64,1); }
+
+/* Quick actions */
+.quick-actions { padding: 0 18px 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.quick-action-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 14px 10px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--surface2);
+  cursor: pointer; transition: all 0.15s; font-family: var(--sans);
+}
+.quick-action-btn:hover { border-color: var(--accent); background: var(--accent-lt); }
+.quick-action-icon { font-size: 20px; }
+.quick-action-label { font-size: 11px; font-weight: 600; color: var(--text2); text-align: center; }
+
+/* ─── PAGE SYSTEM ─── */
+.page-section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 18px;
+}
+.page-section-title { font-family: var(--serif); font-size: 16px; font-weight: 700; color: var(--text); }
+.page-section-sub { font-size: 11px; font-family: var(--mono); color: var(--text3); margin-top: 2px; }
+
+</style>
+</head>
+<body>
+
+<!-- ═══ SIDEBAR ═══ -->
+<nav class="sidebar">
+
+  <div class="sidebar-logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 18 18" fill="none">
+        <rect x="1" y="1" width="16" height="12" rx="2.5" fill="white" opacity="0.9"/>
+        <path d="M1 4l8 5.5L17 4" stroke="#e67e22" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M5 15h8M7 17h4" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
+      </svg>
+    </div>
+    <div class="logo-text">Mail<em>Mind</em></div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-label">Main Menu</div>
+    <div class="nav-item" onclick="navClick(this,'dashboard')">
+      <span class="nav-icon">⊞</span> Dashboard
+    </div>
+    <div class="nav-item active" onclick="navClick(this,'inbox')">
+      <span class="nav-icon">✉</span> Inbox
+      <span class="nav-badge" id="unreadBadge">—</span>
+    </div>
+    <div class="nav-item" onclick="navClick(this,'sent')">
+      <span class="nav-icon">↗</span> Sent
+      <span class="nav-badge green" id="sentBadge">0</span>
+    </div>
+    <div class="nav-item" onclick="navClick(this,'drafts')">
+      <span class="nav-icon">✦</span> AI Drafts
+      <span class="nav-badge" id="draftsBadge" style="background:var(--purple)">0</span>
+    </div>
+    <div class="nav-item" onclick="navClick(this,'analyzed')">
+      <span class="nav-icon">◉</span> Analyzed
+      <span class="nav-badge" id="analyzedBadge" style="background:var(--blue)">0</span>
+    </div>
+    <div class="nav-item" onclick="navClick(this,'guardrails')">
+      <span class="nav-icon">🛡</span> Guardrails
+      <span class="nav-badge" id="guardrailsBadge" style="background:var(--amber)">0</span>
+    </div>
+  </div>
+
+  <div class="sidebar-section" style="margin-top:8px">
+    <div class="sidebar-label">Account</div>
+    <div class="nav-item" onclick="navClick(this)">
+      <span class="nav-icon">⚙</span> Settings
+    </div>
+    <div class="nav-item" onclick="navClick(this)">
+      <span class="nav-icon">↩</span> Logout
+    </div>
+  </div>
+
+  <!-- MODEL PICKER -->
+  <div class="model-section">
+    <div class="model-section-title">AI Model</div>
+    <div class="model-grid" id="modelGrid">
+      <div class="model-chip active" data-model="claude" onclick="selectModel(this)">
+        <span class="mdot" style="background:#27ae60"></span> Claude
+      </div>
+      <div class="model-chip" data-model="mistral-tiny" onclick="selectModel(this)">
+        <span class="mdot" style="background:#fa8231"></span> Tiny
+      </div>
+      <div class="model-chip" data-model="mistral-small" onclick="selectModel(this)">
+        <span class="mdot" style="background:#f0b429"></span> Small
+      </div>
+      <div class="model-chip" data-model="mistral-medium" onclick="selectModel(this)">
+        <span class="mdot" style="background:#e8694a"></span> Medium
+      </div>
+      <div class="model-chip" data-model="mistral-large-latest" onclick="selectModel(this)" style="grid-column: span 2;">
+        <span class="mdot" style="background:#8e44ad"></span> Mistral Large
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar-user">
+    <div class="user-av">AI</div>
+    <div>
+      <div class="user-name">Mail Agent</div>
+      <div class="user-role">Administrator</div>
+    </div>
+  </div>
+
+</nav>
+
+<!-- ═══ MAIN ═══ -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="breadcrumb">Dashboard / Inbox</div>
+      <div class="page-title">Email Agent</div>
+    </div>
+    <div class="topbar-right">
+      <div class="active-model-pill" id="activePill">
+        <span style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block"></span>
+        Claude
+      </div>
+      <div class="search-wrap">🔍&nbsp; Search emails…</div>
+      <div class="topbar-btn" onclick="loadEmails()" title="Load Emails">⟳</div>
+      <div class="guardrail-counter" id="grCounter" onclick="toggleGrLog()" title="Guardrail Events">
+        <span class="gr-dot" id="grDot"></span>
+        <span id="grCounterLabel">Guardrails</span>
+      </div>
+      <div class="topbar-btn">🔔</div>
+      <div class="topbar-btn">⚙</div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- ═══ INBOX PAGE ═══ -->
+    <div class="page active" id="page-inbox">
+
+    <!-- STAT CARDS -->
+    <div class="stat-row">
+      <div class="stat-card" style="animation-delay:.04s">
+        <div class="stat-top">
+          <div class="stat-label">Loaded</div>
+          <div class="stat-icon-wrap" style="background:var(--accent-lt);color:var(--accent)">✉</div>
+        </div>
+        <div class="stat-num" id="s1">—</div>
+        <span class="stat-sub sub-nu">↑ live</span>
+      </div>
+      <div class="stat-card" style="animation-delay:.08s">
+        <div class="stat-top">
+          <div class="stat-label">Unread</div>
+          <div class="stat-icon-wrap" style="background:var(--red-lt);color:var(--red)">◉</div>
+        </div>
+        <div class="stat-num" id="s2">—</div>
+        <span class="stat-sub sub-dn" id="s2badge">↓ pending</span>
+      </div>
+      <div class="stat-card" style="animation-delay:.12s">
+        <div class="stat-top">
+          <div class="stat-label">Analyzed</div>
+          <div class="stat-icon-wrap" style="background:var(--purple-lt);color:var(--purple)">✦</div>
+        </div>
+        <div class="stat-num" id="s3">0</div>
+        <span class="stat-sub sub-up">↑ AI done</span>
+      </div>
+      <div class="stat-card" style="animation-delay:.16s">
+        <div class="stat-top">
+          <div class="stat-label">Replies Sent</div>
+          <div class="stat-icon-wrap" style="background:var(--green-lt);color:var(--green)">↗</div>
+        </div>
+        <div class="stat-num" id="s4">0</div>
+        <span class="stat-sub sub-up">↑ dispatched</span>
+      </div>
+    </div>
+
+    <!-- MID LAYOUT -->
+    <div class="mid-layout">
+
+      <!-- EMAIL TABLE -->
+      <div class="card" style="animation-delay:.2s">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Inbox</div>
+            <div class="card-sub-label">Recent emails</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div id="loadStrip" class="load-strip" style="width:80px;display:none"><div class="load-fill"></div></div>
+            <button class="btn btn-primary btn-sm" onclick="loadEmails()">⟳ Load Emails</button>
+          </div>
+        </div>
+        <div id="loadBar" style="display:none"><div class="load-strip" style="display:block"><div class="load-fill"></div></div></div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width:180px">From</th>
+              <th>Subject</th>
+              <th>Preview</th>
+              <th>Time</th>
+              <th style="width:60px">Status</th>
+              <th style="width:32px" title="Attachments">📎</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr><td colspan="6"><div class="empty-state"><div class="empty-icon">✉</div>Click "Load Emails" to fetch your inbox</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- DETAIL PANEL -->
+      <div class="card detail-panel" style="animation-delay:.24s">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Email Detail</div>
+            <div class="card-sub-label">AI Analysis + Draft</div>
+          </div>
+          <span id="detailStatus"></span>
+        </div>
+        <div class="detail-inner" id="detailContent">
+          <div class="detail-empty">
+            <div class="big-icon">✦</div>
+            <p>Select an email to view details &amp; run AI analysis</p>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /mid-layout -->
+
+    <!-- BOTTOM ROW -->
+    <div class="bottom-row">
+
+      <!-- Activity bars -->
+      <div class="card" style="animation-delay:.28s">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Email Activity</div>
+            <div class="card-sub-label">Last 10 days</div>
+          </div>
+          <div style="display:flex;gap:4px">
+            <button class="btn btn-ghost btn-sm" style="padding:4px 10px">7d</button>
+            <button class="btn btn-primary btn-sm" style="padding:4px 10px">30d</button>
+          </div>
+        </div>
+        <div class="bars-area">
+          <div class="bar-wrap" id="barsWrap"></div>
+          <div style="display:flex;justify-content:space-between;padding:0 2px">
+            <span style="font-size:9px;font-family:var(--mono);color:var(--text3)">Mon</span>
+            <span style="font-size:9px;font-family:var(--mono);color:var(--text3)">Sun</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Senders -->
+      <div class="card" style="animation-delay:.32s">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Top Senders</div>
+            <div class="card-sub-label">By email volume</div>
+          </div>
+        </div>
+        <div class="sender-list" id="senderList">
+          <div style="padding:20px 0;text-align:center;color:var(--text3);font-family:var(--mono);font-size:11px">Load emails to see senders</div>
+        </div>
+      </div>
+
+      <!-- Status breakdown -->
+      <div class="card" style="animation-delay:.36s">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Email Status</div>
+            <div class="card-sub-label">Current breakdown</div>
+          </div>
+        </div>
+        <div class="status-list">
+          <div class="status-item">
+            <div class="status-left"><div class="status-dot" style="background:var(--accent)"></div><div class="status-name">Unread</div></div>
+            <div class="status-count" id="stNew">—</div>
+          </div>
+          <div class="status-item">
+            <div class="status-left"><div class="status-dot" style="background:var(--text3)"></div><div class="status-name">Read</div></div>
+            <div class="status-count" id="stRead">—</div>
+          </div>
+          <div class="status-item">
+            <div class="status-left"><div class="status-dot" style="background:var(--purple)"></div><div class="status-name">Analyzed</div></div>
+            <div class="status-count" id="stAnalyzed">0</div>
+          </div>
+          <div class="status-item">
+            <div class="status-left"><div class="status-dot" style="background:var(--green)"></div><div class="status-name">Replied</div></div>
+            <div class="status-count" id="stSent">0</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /bottom-row -->
+    </div><!-- /page-inbox -->
+
+    <!-- ═══ DASHBOARD PAGE ═══ -->
+    <div class="page" id="page-dashboard">
+      <div class="page-section-header">
+        <div>
+          <div class="page-section-title">Dashboard Overview</div>
+          <div class="page-section-sub" id="dashPageSub">Your email intelligence at a glance</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" onclick="renderDashboardPage()">⟳ Refresh</button>
+          <button class="btn btn-primary btn-sm" onclick="navClick(document.querySelector('[onclick*=inbox]'),'inbox')">✉ Go to Inbox</button>
+        </div>
+      </div>
+
+      <!-- Hero KPIs -->
+      <div class="dash-hero" id="dashHero"></div>
+
+      <!-- Mid row: Activity Feed + Priority Queue -->
+      <div class="dash-mid">
+        <div class="card" style="animation-delay:.18s">
+          <div class="card-head">
+            <div>
+              <div class="card-title">Recent Activity</div>
+              <div class="card-sub-label">Latest email events</div>
+            </div>
+            <span style="font-size:11px;font-family:var(--mono);color:var(--text3)" id="dashActivityTime"></span>
+          </div>
+          <div class="activity-feed" id="dashActivity"></div>
+        </div>
+        <div class="card" style="animation-delay:.22s">
+          <div class="card-head">
+            <div>
+              <div class="card-title">Priority Queue</div>
+              <div class="card-sub-label">Needs your attention</div>
+            </div>
+            <span class="pill pill-new" id="dashPriorityCount" style="font-size:10px">0</span>
+          </div>
+          <div class="priority-list" id="dashPriority"></div>
+        </div>
+      </div>
+
+      <!-- Bottom row: Donut + AI Perf + Quick Actions -->
+      <div class="dash-bottom">
+        <div class="card" style="animation-delay:.26s">
+          <div class="card-head">
+            <div>
+              <div class="card-title">Inbox Breakdown</div>
+              <div class="card-sub-label">Status distribution</div>
+            </div>
+          </div>
+          <div class="dash-donut-wrap" id="dashDonut"></div>
+        </div>
+        <div class="card" style="animation-delay:.30s">
+          <div class="card-head">
+            <div>
+              <div class="card-title">AI Performance</div>
+              <div class="card-sub-label">Processing metrics</div>
+            </div>
+          </div>
+          <div class="perf-list" id="dashPerf"></div>
+        </div>
+        <div class="card" style="animation-delay:.34s">
+          <div class="card-head">
+            <div>
+              <div class="card-title">Quick Actions</div>
+              <div class="card-sub-label">Jump to a task</div>
+            </div>
+          </div>
+          <div class="quick-actions" id="dashQuickActions"></div>
+        </div>
+      </div>
+    </div><!-- /page-dashboard -->
+
+    <!-- ═══ SENT PAGE ═══ -->
+    <div class="page" id="page-sent">
+      <div class="page-section-header">
+        <div>
+          <div class="page-section-title">Sent Replies</div>
+          <div class="page-section-sub" id="sentPageSub">Emails you've replied to via MailMind</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="navClick(document.querySelector('[onclick*=inbox]'),'inbox')">← Back to Inbox</button>
+      </div>
+      <div class="sent-page-grid" id="sentPageGrid">
+        <div class="sent-empty">
+          <div class="sent-empty-icon">↗</div>
+          <div>No sent replies yet.</div>
+          <div style="margin-top:6px;opacity:0.7">Analyze an email and send a reply to see it here.</div>
+        </div>
+      </div>
+    </div><!-- /page-sent -->
+
+    <!-- ═══ AI DRAFTS PAGE ═══ -->
+    <div class="page" id="page-drafts">
+      <div class="page-section-header">
+        <div>
+          <div class="page-section-title">AI Drafts</div>
+          <div class="page-section-sub" id="draftsPageSub">AI-generated reply drafts ready to review &amp; send</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="navClick(document.querySelector('[onclick*=inbox]'),'inbox')">← Back to Inbox</button>
+      </div>
+      <div class="drafts-grid" id="draftsPageGrid">
+        <div class="drafts-empty">
+          <div class="drafts-empty-icon">✦</div>
+          <div>No drafts yet.</div>
+          <div style="margin-top:6px;opacity:0.7">Analyze emails to generate AI drafts.</div>
+        </div>
+      </div>
+    </div><!-- /page-drafts -->
+
+    <!-- ═══ ANALYZED PAGE ═══ -->
+    <div class="page" id="page-analyzed">
+      <div class="page-section-header">
+        <div>
+          <div class="page-section-title">Analyzed Emails</div>
+          <div class="page-section-sub" id="analyzedPageSub">All emails with AI analysis results</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="navClick(document.querySelector('[onclick*=inbox]'),'inbox')">← Back to Inbox</button>
+      </div>
+      <div class="analyzed-grid" id="analyzedPageGrid">
+        <div class="analyzed-empty">
+          <div class="analyzed-empty-icon">◉</div>
+          <div>No analyzed emails yet.</div>
+          <div style="margin-top:6px;opacity:0.7">Select an email and click Analyze to get started.</div>
+        </div>
+      </div>
+    </div><!-- /page-analyzed -->
+
+    <!-- ═══ GUARDRAILS PAGE ═══ -->
+    <div class="page" id="page-guardrails">
+      <div class="page-section-header">
+        <div>
+          <div class="page-section-title">Guardrails</div>
+          <div class="page-section-sub" id="guardrailsPageSub">Active safety rules protecting every AI interaction</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" onclick="renderGuardrailsPage()">⟳ Refresh</button>
+          <button class="btn btn-primary btn-sm" onclick="clearGuardrailLog()">✕ Clear Log</button>
+        </div>
+      </div>
+
+      <!-- Summary stats -->
+      <div class="guardrails-summary" id="guardrailsSummary">
+        <div class="gr-stat-card" style="animation-delay:.04s">
+          <div class="gr-stat-icon" style="background:var(--green-lt);color:var(--green)">✓</div>
+          <div>
+            <div class="gr-stat-num" id="grPagePass">0</div>
+            <div class="gr-stat-label">Checks Passed</div>
+          </div>
+        </div>
+        <div class="gr-stat-card" style="animation-delay:.08s">
+          <div class="gr-stat-icon" style="background:var(--amber-lt);color:var(--amber)">⚠</div>
+          <div>
+            <div class="gr-stat-num" id="grPageWarn">0</div>
+            <div class="gr-stat-label">Warnings</div>
+          </div>
+        </div>
+        <div class="gr-stat-card" style="animation-delay:.12s">
+          <div class="gr-stat-icon" style="background:var(--red-lt);color:var(--red)">✕</div>
+          <div>
+            <div class="gr-stat-num" id="grPageBlock">0</div>
+            <div class="gr-stat-label">Blocked</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main layout: rules + live log -->
+      <div class="gr-layout">
+
+        <!-- Rules list -->
+        <div>
+          <div class="page-section-header" style="margin-bottom:12px">
+            <div>
+              <div class="page-section-title" style="font-size:14px">Active Rules</div>
+              <div class="page-section-sub">Click a toggle to enable / disable a rule</div>
+            </div>
+          </div>
+          <div class="gr-rules-grid" id="grRulesGrid"></div>
+        </div>
+
+        <!-- Live event log -->
+        <div class="card gr-live-log" style="animation-delay:.2s;align-self:start">
+          <div class="card-head">
+            <div>
+              <div class="card-title">Live Event Log</div>
+              <div class="card-sub-label" id="grLiveLogSub">Last 60 events</div>
+            </div>
+            <span id="grLiveDot" class="gr-dot" style="margin-left:4px"></span>
+          </div>
+          <div class="gr-live-log-inner" id="grLiveLogInner">
+            <div class="gr-empty-log">No guardrail events yet.</div>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /page-guardrails -->
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<div id="toast"></div>
+
+<!-- ─── GUARDRAIL LOG PANEL ─── -->
+<div class="guardrail-log" id="grLog">
+  <div class="guardrail-log-head">
+    <span class="guardrail-log-title">🛡 Guardrail Log</span>
+    <span class="guardrail-log-close" onclick="document.getElementById('grLog').classList.remove('open')">✕</span>
+  </div>
+  <div class="guardrail-log-body" id="grLogBody">
+    <div style="color:var(--text3);font-family:var(--mono);font-size:10px;padding:8px 0">No events yet.</div>
+  </div>
+</div>
+
+<!-- ═══ AVATAR COLORS ═══ -->
+<script>
+const AV_COLORS = [
+  { bg:'#fef0e3', color:'#c0591a' },
+  { bg:'#e8f5ec', color:'#1e8449' },
+  { bg:'#e3f0fb', color:'#1a6fa0' },
+  { bg:'#fce4ec', color:'#b71c6c' },
+  { bg:'#f3e8ff', color:'#6a1fa8' },
+  { bg:'#fef3cd', color:'#b7780a' },
+  { bg:'#e8f5f5', color:'#0e7f7a' },
+];
+function avColor(str) {
+  let h = 0; for (let c of str) h = (h*31 + c.charCodeAt(0)) % AV_COLORS.length;
+  return AV_COLORS[Math.abs(h)];
+}
+function initials(s) {
+  if (!s) return '?';
+  const m = s.match(/^([A-Za-z])[a-z]* ([A-Za-z])/);
+  if (m) return m[1].toUpperCase() + m[2].toUpperCase();
+  return s.substring(0,2).toUpperCase();
+}
+function shortName(s) {
+  if (!s) return '—';
+  return (s.match(/^([^<]+)/)?.[1] || s).trim().substring(0,22);
+}
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ══════════════════════════════════════════
+// ── GUARDRAIL ENGINE ──
+// ══════════════════════════════════════════
+const GR = {
+  events: [],
+  passCount: 0,
+  warnCount: 0,
+  blockCount: 0,
+
+  // ── INPUT GUARDRAILS ──
+  // Returns { ok: bool, reason: string, sanitized: string }
+  checkInput(text, context = '') {
+    const checks = [];
+
+    // 1. Length limit — prevent prompt injection via huge payloads
+    if (text.length > 8000) {
+      const truncated = text.substring(0, 8000) + '\n[Content truncated by guardrail — exceeded 8000 chars]';
+      checks.push({ level: 'warn', msg: `Input truncated: ${text.length} → 8000 chars (${context})` });
+      text = truncated;
+    }
+
+    // 2. Prompt injection patterns
+    const injectionPatterns = [
+      /ignore\s+(all\s+)?previous\s+instructions/i,
+      /you\s+are\s+now\s+(a\s+)?different/i,
+      /disregard\s+(your\s+)?system\s+prompt/i,
+      /act\s+as\s+(if\s+you\s+(are|were)\s+)?(?!an?\s+email)/i,
+      /jailbreak/i,
+      /DAN\s+mode/i,
+      /override\s+(your\s+)?(safety|guidelines|rules)/i,
+    ];
+    for (const p of injectionPatterns) {
+      if (p.test(text)) {
+        checks.push({ level: 'block', msg: `Input blocked: prompt injection detected (${context})` });
+        this._log(checks);
+        return { ok: false, reason: 'Prompt injection pattern detected in input.', sanitized: text };
+      }
+    }
+
+    // 3. Sensitive data patterns — warn & redact
+    const piiPatterns = [
+      { re: /\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b/g, label: 'credit card', mask: '[CARD-REDACTED]' },
+      { re: /\b\d{3}-\d{2}-\d{4}\b/g, label: 'SSN', mask: '[SSN-REDACTED]' },
+      { re: /password\s*[:=]\s*\S+/gi, label: 'password', mask: 'password: [REDACTED]' },
+      { re: /api[-_]?key\s*[:=]\s*\S+/gi, label: 'API key', mask: 'api_key: [REDACTED]' },
+      { re: /Bearer\s+[A-Za-z0-9\-._~+/]+=*/g, label: 'bearer token', mask: 'Bearer [REDACTED]' },
+    ];
+    for (const { re, label, mask } of piiPatterns) {
+      if (re.test(text)) {
+        text = text.replace(re, mask);
+        checks.push({ level: 'warn', msg: `Input sanitized: ${label} pattern redacted (${context})` });
+      }
+    }
+
+    // 4. Disallow sending to unexpected external addresses via the AI
+    const suspiciousRecipients = /(?:to|recipient|send\s+to)\s*:\s*[^@\s]+@(?!gmail\.com|outlook\.com|yahoo\.com|hotmail\.com)[a-z0-9.-]+\.[a-z]{2,}/i;
+    if (suspiciousRecipients.test(text) && context === 'send') {
+      checks.push({ level: 'warn', msg: `Input warning: unrecognised recipient domain in send action` });
+    }
+
+    // 5. Size sanity — flag very short inputs
+    if (text.trim().length < 5) {
+      checks.push({ level: 'warn', msg: `Input warning: suspiciously short payload (${context})` });
+    }
+
+    if (checks.length === 0) checks.push({ level: 'pass', msg: `Input OK — passed all checks (${context})` });
+    this._log(checks);
+    return { ok: true, reason: null, sanitized: text };
+  },
+
+  // ── OUTPUT GUARDRAILS ──
+  // Returns { ok: bool, reason: string, sanitized: string }
+  checkOutput(text, context = '') {
+    const checks = [];
+
+    // 1. Response length sanity
+    if (!text || text.trim().length === 0) {
+      checks.push({ level: 'warn', msg: `Output warning: empty response received (${context})` });
+    }
+
+    // 2. Hallucination signals — AI asserting it sent something without MCP confirmation
+    const hallucPatterns = [
+      /I\s+(have\s+)?(already\s+)?sent\s+(the\s+)?email/i,
+      /email\s+(has\s+been|was)\s+sent\s+successfully/i,
+      /I\s+forwarded\s+your\s+email/i,
+      /message\s+was\s+delivered/i,
+    ];
+    for (const p of hallucPatterns) {
+      if (p.test(text)) {
+        checks.push({ level: 'warn', msg: `Output warning: possible hallucinated send action detected (${context})` });
+        break;
+      }
+    }
+
+    // 3. PII in AI output — redact before display
+    const outputPII = [
+      { re: /\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b/g, label: 'credit card', mask: '[CARD-REDACTED]' },
+      { re: /\b\d{3}-\d{2}-\d{4}\b/g, label: 'SSN', mask: '[SSN-REDACTED]' },
+    ];
+    for (const { re, label, mask } of outputPII) {
+      if (re.test(text)) {
+        text = text.replace(re, mask);
+        checks.push({ level: 'warn', msg: `Output sanitized: ${label} pattern redacted from AI response (${context})` });
+      }
+    }
+
+    // 4. Toxic / inappropriate content
+    const toxicPatterns = [
+      /\b(kill|murder|bomb|attack)\s+(the\s+)?user/i,
+      /\bself.?harm\b/i,
+    ];
+    for (const p of toxicPatterns) {
+      if (p.test(text)) {
+        checks.push({ level: 'block', msg: `Output blocked: toxic content detected in AI response (${context})` });
+        this._log(checks);
+        return { ok: false, reason: 'AI response contained inappropriate content.', sanitized: text };
+      }
+    }
+
+    // 5. Verify JSON structure when expected
+    if (context === 'analysis') {
+      try {
+        const cleaned = text.replace(/```json|```/g, '').trim();
+        const parsed = JSON.parse(cleaned);
+        const requiredKeys = ['intent', 'sentiment', 'priority', 'summary', 'draft'];
+        const missing = requiredKeys.filter(k => !(k in parsed));
+        if (missing.length) {
+          checks.push({ level: 'warn', msg: `Output warning: analysis JSON missing keys: ${missing.join(', ')}` });
+        } else {
+          checks.push({ level: 'pass', msg: `Output OK — analysis JSON schema valid (${context})` });
+        }
+      } catch {
+        checks.push({ level: 'warn', msg: `Output warning: expected JSON but got non-parseable response (${context})` });
+      }
+    }
+
+    // 6. Overly long output
+    if (text.length > 6000) {
+      checks.push({ level: 'warn', msg: `Output warning: response unusually long (${text.length} chars, ${context})` });
+    }
+
+    if (checks.length === 0) checks.push({ level: 'pass', msg: `Output OK — passed all checks (${context})` });
+    this._log(checks);
+    return { ok: true, reason: null, sanitized: text };
+  },
+
+  // ── INTERNAL ──
+  _log(checks) {
+    const ts = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    for (const c of checks) {
+      this.events.unshift({ ...c, ts });
+      if (c.level === 'pass') this.passCount++;
+      else if (c.level === 'warn') this.warnCount++;
+      else if (c.level === 'block') this.blockCount++;
+    }
+    if (this.events.length > 60) this.events = this.events.slice(0, 60);
+    this._updateUI();
+  },
+
+  _updateUI() {
+    // Counter
+    const dot = document.getElementById('grDot');
+    const label = document.getElementById('grCounterLabel');
+    const total = this.passCount + this.warnCount + this.blockCount;
+    if (dot && label) {
+      const dotClass = this.blockCount > 0 ? 'block' : this.warnCount > 0 ? 'warn' : '';
+      dot.className = 'gr-dot' + (dotClass ? ' ' + dotClass : '');
+      label.textContent = total
+        ? `${this.passCount}✓ ${this.warnCount}⚠ ${this.blockCount}✕`
+        : 'Guardrails';
+    }
+    // Log panel
+    const body = document.getElementById('grLogBody');
+    if (body) {
+      body.innerHTML = this.events.length
+        ? this.events.map(e => {
+            const icon = { pass: '✓', warn: '⚠', block: '✕', info: 'ℹ' }[e.level] || '·';
+            return `<div class="guardrail-entry ${e.level}">${icon} [${e.ts}] ${e.msg}</div>`;
+          }).join('')
+        : '<div style="color:var(--text3);font-family:var(--mono);font-size:10px;padding:8px 0">No events yet.</div>';
+    }
+  }
+};
+
+function toggleGrLog() {
+  document.getElementById('grLog').classList.toggle('open');
+}
+
+// ── API CONFIG ──
+const CLAUDE_API  = 'https://api.anthropic.com/v1/messages';
+const MISTRAL_API = 'https://api.mistral.ai/v1/chat/completions';
+const MISTRAL_KEY = 'uegOiDzMMPQPDt0h8XGMJSSioz0FyyJ4';
+const GMAIL_MCP   = 'https://gmail.mcp.claude.com/mcp';
+
+// ── QUEUED SENDS (sessionStorage fallback) ──
+const QUEUED_KEY = 'mailmind_queued_sends';
+function getQueuedSends() {
+  try { return JSON.parse(sessionStorage.getItem(QUEUED_KEY) || '[]'); } catch { return []; }
+}
+function saveQueuedSend(record) {
+  const q = getQueuedSends();
+  q.unshift(record);
+  try { sessionStorage.setItem(QUEUED_KEY, JSON.stringify(q.slice(0, 50))); } catch {}
+}
+function clearQueuedSends() {
+  try { sessionStorage.removeItem(QUEUED_KEY); } catch {}
+}
+// Separate array for queued/offline sent records (supplements emails[] sent status)
+
+let emails = [], sel = null, analyzed = 0, sent = 0;
+let activeModel = 'claude';
+
+// ── MODEL SELECT ──
+function selectModel(el) {
+  document.querySelectorAll('.model-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  activeModel = el.dataset.model;
+  const label = el.textContent.trim();
+  const dotColor = el.querySelector('.mdot').style.background;
+  document.getElementById('activePill').innerHTML =
+    `<span style="width:7px;height:7px;border-radius:50%;background:${dotColor};display:inline-block;flex-shrink:0"></span> ${label}`;
+  toast(`Model → ${label}`, 'ok');
+}
+function modelLabel() {
+  return document.querySelector('.model-chip.active')?.textContent.trim() || activeModel;
+}
+function navClick(el, page) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+  if (page) switchPage(page);
+}
+
+function switchPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const target = document.getElementById('page-' + page);
+  if (target) target.classList.add('active');
+  const titles = { inbox: 'Inbox', sent: 'Sent Replies', drafts: 'AI Drafts', analyzed: 'Analyzed Emails', dashboard: 'Dashboard', guardrails: 'Guardrails' };
+  document.querySelector('.breadcrumb').textContent = 'Dashboard / ' + (titles[page] || page);
+  document.querySelector('.page-title').textContent = titles[page] || page;
+  if (page === 'sent') renderSentPage();
+  if (page === 'drafts') renderDraftsPage();
+  if (page === 'analyzed') renderAnalyzedPage();
+  if (page === 'dashboard') renderDashboardPage();
+  if (page === 'guardrails') renderGuardrailsPage();
+}
+
+// ── API CALLS ──
+async function callGmail(prompt) {
+  // ── INPUT GUARDRAIL ──
+  const inGR = GR.checkInput(prompt, 'gmail');
+  if (!inGR.ok) throw new Error('Input blocked by guardrail: ' + inGR.reason);
+  prompt = inGR.sanitized;
+
+  const r = await fetch(CLAUDE_API, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514', max_tokens: 1000,
+      system: 'You are an email assistant. Use Gmail MCP tools. Return ONLY JSON arrays in ```json code blocks.',
+      messages: [{ role: 'user', content: prompt }],
+      mcp_servers: [{ type: 'url', url: GMAIL_MCP, name: 'gmail' }]
+    })
+  });
+  if (!r.ok) throw new Error(`${r.status}`);
+  const data = await r.json();
+  // ── OUTPUT GUARDRAIL ──
+  const rawText = (data.content || []).map(b => b.type === 'text' ? b.text : b.content?.[0]?.text || '').join('');
+  GR.checkOutput(rawText, 'gmail-response');
+  return data;
+}
+
+async function callAI(prompt, grContext = 'ai') {
+  // ── INPUT GUARDRAIL ──
+  const inGR = GR.checkInput(prompt, grContext);
+  if (!inGR.ok) throw new Error('Input blocked by guardrail: ' + inGR.reason);
+  prompt = inGR.sanitized;
+
+  let result = '';
+
+  if (activeModel === 'claude') {
+    const r = await fetch(CLAUDE_API, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514', max_tokens: 1000,
+        system: 'You are a professional email analyst. Respond ONLY with a raw JSON object — no markdown, no code fences.',
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    if (!r.ok) throw new Error(`Claude ${r.status}`);
+    const d = await r.json();
+    result = d.content?.filter(b => b.type === 'text').map(b => b.text).join('') || '';
+  } else {
+    const r = await fetch(MISTRAL_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${MISTRAL_KEY}` },
+      body: JSON.stringify({
+        model: activeModel, max_tokens: 1000,
+        messages: [
+          { role: 'system', content: 'You are a professional email analyst. Respond ONLY with a raw JSON object — no markdown, no code fences.' },
+          { role: 'user', content: prompt }
+        ]
+      })
+    });
+    if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(`Mistral ${r.status}: ${e.message||''}`); }
+    const d = await r.json();
+    result = d.choices?.[0]?.message?.content || '';
+  }
+
+  // ── OUTPUT GUARDRAIL ──
+  const outGR = GR.checkOutput(result, grContext);
+  if (!outGR.ok) throw new Error('Output blocked by guardrail: ' + outGR.reason);
+  return outGR.sanitized;
+}
+
+// ── PARSE EMAILS ──
+function parseEmails(data) {
+  const txt = (data.content || []).map(b => b.type === 'text' ? b.text : b.content?.[0]?.text || '').join('\n');
+  try {
+    const m = txt.match(/```json\n?([\s\S]*?)```/) || txt.match(/(\[[\s\S]*?\])/);
+    if (m) { const p = JSON.parse(m[1]); if (Array.isArray(p)) return p; }
+  } catch {}
+  const out = [];
+  txt.split(/\n(?=\d+\.|---|\*\*From)/).forEach((blk, i) => {
+    const from = blk.match(/from[:\s*]+([^\n]+)/i)?.[1]?.trim() || '';
+    const subj = blk.match(/subject[:\s*]+([^\n]+)/i)?.[1]?.trim() || '(No Subject)';
+    const prev = blk.match(/(?:snippet|preview)[:\s*]+([^\n]+)/i)?.[1]?.trim() || blk.substring(0, 80).replace(/\n/g, ' ');
+    const date = blk.match(/date[:\s*]+([^\n]+)/i)?.[1]?.trim() || '';
+    const id = `e_${i}`;
+    if (from) out.push({ id, from, to: 'me', subject: subj, preview: prev, date, body: blk, isUnread: true });
+  });
+  return out.length ? out : null;
+}
+
+// ── LOAD EMAILS ──
+async function loadEmails() {
+  setLoading(true);
+  try {
+    const data = await callGmail(
+      `Fetch my top 10 most recent Gmail inbox emails. For each email return:
+id, from, to, subject, date (e.g. "Mar 18, 09:14"), preview (first 100 chars), body (first 200 chars), isUnread (bool).
+Return ONLY a JSON array in a \`\`\`json code block.`);
+    const parsed = parseEmails(data);
+    emails = parsed?.length ? parsed.map(e => ({ ...e, status: e.isUnread ? 'new' : 'read' })) : null;
+    if (!emails) { loadDemo(); } else { renderAll(); toast(`Loaded ${emails.length} emails`, 'ok'); }
+  } catch (e) { loadDemo(); toast('Demo mode — Gmail not reachable', ''); }
+  finally { setLoading(false); }
+}
+
+function loadDemo() {
+  emails = [
+    { id:'d1', from:'John Miller <john@acme.com>', to:'me', subject:'Q1 Budget Review Meeting', preview:'Hi, wanted to follow up on our Q1 budget review scheduled for Tuesday…', date:'Mar 18, 09:14', body:'Hi,\n\nI wanted to follow up on our Q1 budget review meeting scheduled for next Tuesday. Could you please prepare the expense report and send it before Friday?\n\nBest,\nJohn', status:'new',
+      attachments:[{ name:'Q1_Expense_Report.pdf', size:'284 KB', type:'pdf', mimeType:'application/pdf', demo:true, demoContent:'Q1 Expense Report Summary:\n- Total Expenses: $48,320\n- Travel: $12,400 (26%)\n- Software Licenses: $18,200 (38%)\n- Marketing: $9,800 (20%)\n- Miscellaneous: $7,920 (16%)\n\nCompared to Q4 last year, total spending increased by 8.2%. Main driver was increased travel costs for client visits. Budget overage in software licenses due to new security tooling procurement.' }] },
+    { id:'d2', from:'Sarah Chen <sarah@client.io>', to:'me', subject:'Invoice #2847 — Overdue', preview:'Please note that invoice #2847 for $4,500 is now overdue by 14 days…', date:'Mar 17, 15:30', body:'Dear Team,\n\nThis is a reminder that Invoice #2847 for $4,500 is now 14 days overdue. Please arrange payment at your earliest convenience.\n\nRegards,\nSarah', status:'new',
+      attachments:[{ name:'Invoice_2847.pdf', size:'92 KB', type:'pdf', mimeType:'application/pdf', demo:true, demoContent:'INVOICE #2847\nDate: March 3, 2025\nDue: March 10, 2025 (OVERDUE)\n\nBill To: Your Company\nFrom: Client.io Services\n\nServices:\n- UX Consulting (Feb) .............. $3,200\n- Design Review Session ........... $800\n- Asset Delivery ................... $500\n\nSubtotal: $4,500\nTax: $0 (international)\nTOTAL DUE: $4,500 USD\n\nPayment terms: Wire transfer or ACH. Late fees of 1.5%/month apply after due date.' }, { name:'payment_instructions.txt', size:'1.2 KB', type:'txt', mimeType:'text/plain', demo:true, demoContent:'PAYMENT INSTRUCTIONS\nBank: First National Bank\nAccount: 4820-9913-0041\nRouting: 021000021\nSWIFT: FNBAUS33\nReference: INV-2847' }] },
+    { id:'d3', from:'Alex Rivera <alex@startup.co>', to:'me', subject:'Partnership Proposal', preview:"We'd love to explore a potential partnership — can we schedule a call?", date:'Mar 17, 11:05', body:"Hello,\n\nI hope this message finds you well. We've been following your work closely and believe there's a great opportunity for collaboration. Would love to schedule a call this week.\n\nBest,\nAlex", status:'read', attachments:[] },
+    { id:'d4', from:'Lisa Park <lisa@design.studio>', to:'me', subject:'Project Milestone Update', preview:'Completed Phase 2 wireframes — ready for your review and feedback!', date:'Mar 16, 16:45', body:"Hi,\n\nExcited to share that we've completed all Phase 2 wireframes for the dashboard redesign. Uploaded to the shared drive — please share feedback by EOD Thursday.\n\nThanks,\nLisa", status:'read',
+      attachments:[{ name:'Dashboard_Wireframes_v2.png', size:'1.8 MB', type:'img', mimeType:'image/png', demo:true, demoContent:'[Wireframe Image: Dashboard redesign Phase 2 — Contains 6 screens: Home overview, Analytics view, Email inbox, Settings panel, User profile, and Notification center. Clean minimal layout with sidebar navigation and content cards. Color palette: white, light gray, blue accent.]' }, { name:'Design_Notes.docx', size:'48 KB', type:'doc', mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document', demo:true, demoContent:'Design Notes v2:\n- Navigation: moved from top bar to left sidebar per stakeholder feedback\n- Cards: increased padding from 16px to 24px for better readability\n- Color: replaced purple accent with blue for accessibility contrast ratio compliance (WCAG AA)\n- Mobile: responsive breakpoints added at 768px and 1024px\n- Open items: dark mode toggle placement TBD, chart library finalization pending dev sign-off' }] },
+    { id:'d5', from:'Marcus Wong <m.wong@legal.com>', to:'me', subject:'Contract Amendment Required', preview:'The contract requires two minor amendments per our legal review…', date:'Mar 16, 10:22', body:'Dear Sir/Madam,\n\nFollowing legal review, the contract dated March 1st requires amendments in sections 4.2 and 7.1 regarding liability clauses. Please review the redlines and confirm acceptance.\n\nBest,\nMarcus', status:'new',
+      attachments:[{ name:'Contract_Amendment_v3_redlined.pdf', size:'412 KB', type:'pdf', mimeType:'application/pdf', demo:true, demoContent:'CONTRACT AMENDMENT — REDLINED VERSION\n\nSection 4.2 (Liability Cap) — AMENDED:\nOLD: "Liability shall not exceed the total contract value of $50,000"\nNEW: "Liability shall not exceed 150% of the total contract value ($75,000) for breaches related to data security or IP infringement"\n\nSection 7.1 (Termination) — AMENDED:\nOLD: "Either party may terminate with 30 days notice"\nNEW: "Either party may terminate with 60 days written notice. Early termination penalty of 20% of remaining contract value applies if terminated before 6 months."\n\nPlease confirm acceptance via email reply or countersigned copy by March 22, 2025.' }] },
+    { id:'d6', from:'Priya Nair <priya@techco.io>', to:'me', subject:'Onboarding Call Confirmed', preview:'Your onboarding call is confirmed for Thursday 3pm EST via Google Meet…', date:'Mar 15, 08:50', body:'Hi,\n\nYour onboarding call is confirmed for Thursday at 3:00pm EST. Please use the Google Meet link below. Let me know if you need to reschedule.\n\nPriya', status:'read', attachments:[] },
+    { id:'d7', from:'Tom Walsh <tom@corp.net>', to:'me', subject:'Q4 Performance Report', preview:"I've attached the Q4 performance report for your review ahead of Monday's meeting…", date:'Mar 14, 14:10', body:"Hi,\n\nI've attached the Q4 performance report. Key highlights: revenue up 18%, churn down 3%. Happy to discuss further ahead of Monday's board meeting.\n\nTom", status:'new',
+      attachments:[{ name:'Q4_2024_Performance_Report.xlsx', size:'560 KB', type:'xls', mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', demo:true, demoContent:'Q4 2024 PERFORMANCE REPORT\n\nRevenue: $2.4M (+18% YoY)\nMRR: $800K (+12% QoQ)\nNew Customers: 142 (+22%)\nChurn Rate: 3.1% (-0.4% improvement)\nNPS Score: 67 (+5 points)\nSupport Tickets: 892 (-8%)\nAvg Resolution Time: 4.2 hrs (-1.1 hrs)\n\nTop Performing Regions: APAC (+34%), EMEA (+21%)\nUnderperforming: LATAM (-4%)\n\nQ1 2025 Targets: $2.7M revenue, <3% churn, NPS >70' }] },
+  ];
+  renderAll();
+  toast('Showing demo data', '');
+}
+
+function renderAll() {
+  renderTable(); updateStats(); renderBars(); renderSenders(); updateStatus();
+  document.getElementById('unreadBadge').textContent = emails.filter(e => e.status === 'new').length || '0';
+  const activePage = document.querySelector('.page.active')?.id?.replace('page-','');
+  if (activePage && activePage !== 'inbox') {
+    if (activePage === 'sent') renderSentPage();
+    if (activePage === 'drafts') renderDraftsPage();
+    if (activePage === 'analyzed') renderAnalyzedPage();
+    if (activePage === 'dashboard') renderDashboardPage();
+  }
+}
+
+// ── TABLE ──
+function renderTable() {
+  const tb = document.getElementById('tbody');
+  if (!emails?.length) {
+    tb.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">✉</div>No emails found</div></td></tr>`;
+    return;
+  }
+  tb.innerHTML = emails.map((e, i) => {
+    const name = shortName(e.from);
+    const ini = initials(name);
+    const col = avColor(name);
+    const hasAtt = e.attachments?.length > 0;
+    return `
+    <tr onclick="selectEmail(${i})" id="row${i}" style="animation-delay:${i*.04}s" class="${sel===i?'sel-row':''}">
+      <td class="td-av">
+        <div class="av-wrap">
+          <div class="av" style="background:${col.bg};color:${col.color}">${ini}</div>
+          <div class="av-name">${esc(name.substring(0,16))}</div>
+        </div>
+      </td>
+      <td class="td-subj" style="font-weight:${e.status==='new'?600:400}">${esc(e.subject)}</td>
+      <td class="td-prev">${esc((e.preview||'').substring(0,38))}…</td>
+      <td class="td-time">${esc(e.date||'')}</td>
+      <td class="td-status"><span class="pill pill-${e.status}">${e.status}</span></td>
+      <td style="width:32px;text-align:center;font-size:13px;opacity:${hasAtt?1:0.15}" title="${hasAtt?e.attachments.length+' attachment(s)':'No attachments'}">📎${hasAtt?`<span style="font-size:9px;font-family:var(--mono);color:var(--accent);vertical-align:top">${e.attachments.length}</span>`:''}</td>
+      <td class="td-act">
+        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();analyzeEmail(${i})" style="font-size:11px;padding:5px 10px">✦ Analyze</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── ATTACHMENT HELPERS ──
+function attIcon(type) {
+  return { pdf:'📄', img:'🖼️', doc:'📝', xls:'📊', txt:'📃', other:'📎' }[type] || '📎';
+}
+function attIconClass(type) {
+  return type || 'other';
+}
+function formatSize(s) { return s || ''; }
+
+function renderAttachments(e, i) {
+  const atts = e.attachments || [];
+  if (!atts.length) return '';
+  return `
+    <div class="attach-section">
+      <div class="attach-label">📎 Attachments (${atts.length})</div>
+      <div class="attach-list" id="attList${i}">
+        ${atts.map((a, ai) => `
+          <div class="attach-item" id="attItem${i}_${ai}" onclick="analyzeAttachment(${i},${ai})">
+            <div class="attach-icon ${attIconClass(a.type)}">${attIcon(a.type)}</div>
+            <div class="attach-info">
+              <div class="attach-name">${esc(a.name)}</div>
+              <div class="attach-meta">${esc(a.size)} · click to analyze</div>
+            </div>
+            <span class="attach-badge pending" id="attBadge${i}_${ai}">Analyze</span>
+          </div>
+          <div class="attach-analysis" id="attAnalysis${i}_${ai}"></div>
+        `).join('')}
+      </div>
+    </div>
+    <div class="drop-zone" id="dropZone${i}" onclick="triggerUpload(${i})"
+      ondragover="event.preventDefault();this.classList.add('drag-over')"
+      ondragleave="this.classList.remove('drag-over')"
+      ondrop="handleDrop(event,${i})">
+      <input type="file" id="fileInput${i}" multiple accept=".pdf,.txt,.png,.jpg,.jpeg,.docx,.xlsx,.csv"
+        onchange="handleFiles(event,${i})">
+      <div class="drop-zone-icon">⬆</div>
+      Drop files here or click to upload &amp; analyze
+    </div>`;
+}
+
+function triggerUpload(i) {
+  document.getElementById(`fileInput${i}`)?.click();
+}
+
+async function handleDrop(event, i) {
+  event.preventDefault();
+  document.getElementById(`dropZone${i}`)?.classList.remove('drag-over');
+  const files = Array.from(event.dataTransfer.files);
+  await addAndAnalyzeFiles(files, i);
+}
+
+async function handleFiles(event, i) {
+  const files = Array.from(event.target.files);
+  await addAndAnalyzeFiles(files, i);
+}
+
+async function addAndAnalyzeFiles(files, i) {
+  const e = emails[i];
+  if (!e.attachments) e.attachments = [];
+  for (const file of files) {
+    const type = getFileType(file.name);
+    const size = formatFileSize(file.size);
+    const att = { name: file.name, size, type, mimeType: file.type, file };
+    e.attachments.push(att);
+  }
+  selectEmail(i);
+  // auto-analyze newly added files
+  for (let ai = e.attachments.length - files.length; ai < e.attachments.length; ai++) {
+    await analyzeAttachment(i, ai);
+  }
+}
+
+function getFileType(name) {
+  const ext = name.split('.').pop().toLowerCase();
+  if (['pdf'].includes(ext)) return 'pdf';
+  if (['png','jpg','jpeg','gif','webp'].includes(ext)) return 'img';
+  if (['doc','docx'].includes(ext)) return 'doc';
+  if (['xls','xlsx','csv'].includes(ext)) return 'xls';
+  if (['txt','md'].includes(ext)) return 'txt';
+  return 'other';
+}
+
+function formatFileSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024*1024) return (bytes/1024).toFixed(0) + ' KB';
+  return (bytes/(1024*1024)).toFixed(1) + ' MB';
+}
+
+async function readFileAsBase64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+async function readFileAsText(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result);
+    r.onerror = rej;
+    r.readAsText(file);
+  });
+}
+
+// ── ANALYZE SINGLE ATTACHMENT ──
+async function analyzeAttachment(emailIdx, attIdx) {
+  const e = emails[emailIdx];
+  const att = e.attachments?.[attIdx];
+  if (!att) return;
+
+  const badge = document.getElementById(`attBadge${emailIdx}_${attIdx}`);
+  const item  = document.getElementById(`attItem${emailIdx}_${attIdx}`);
+  const box   = document.getElementById(`attAnalysis${emailIdx}_${attIdx}`);
+  if (!badge || !box) return;
+
+  badge.textContent = 'Analyzing…'; badge.className = 'attach-badge loading';
+  item?.classList.add('analyzing');
+
+  try {
+    let result = '';
+
+    if (att.demo) {
+      // Demo mode: use pre-baked content
+      result = await callAI(`Analyze this email attachment and return a concise insight. Be specific about what action may be needed.
+Attachment: "${att.name}" (${att.type.toUpperCase()}, ${att.size})
+Content:
+${att.demoContent}
+
+Email context — From: ${e.from}, Subject: ${e.subject}
+
+Respond in 2-4 sentences focusing on: key findings, action items, and relevance to the email.`);
+    } else if (att.file) {
+      const type = att.type;
+      if (type === 'img') {
+        // Image → base64 vision
+        const b64 = await readFileAsBase64(att.file);
+        const mime = att.file.type || 'image/png';
+        const r = await fetch(CLAUDE_API, {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({
+            model:'claude-sonnet-4-20250514', max_tokens:600,
+            system:'You are an email assistant analyzing image attachments. Be concise and actionable.',
+            messages:[{ role:'user', content:[
+              { type:'image', source:{ type:'base64', media_type:mime, data:b64 } },
+              { type:'text', text:`This image is attached to an email from ${e.from} with subject "${e.subject}". Describe what you see and any relevant action items in 2-4 sentences.` }
+            ]}]
+          })
+        });
+        const d = await r.json();
+        result = d.content?.filter(b=>b.type==='text').map(b=>b.text).join('') || 'Could not analyze image.';
+      } else if (type === 'pdf') {
+        // PDF → base64 document
+        const b64 = await readFileAsBase64(att.file);
+        const r = await fetch(CLAUDE_API, {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({
+            model:'claude-sonnet-4-20250514', max_tokens:600,
+            system:'You are an email assistant analyzing PDF attachments. Be concise and actionable.',
+            messages:[{ role:'user', content:[
+              { type:'document', source:{ type:'base64', media_type:'application/pdf', data:b64 } },
+              { type:'text', text:`This PDF is attached to an email from ${e.from} with subject "${e.subject}". Summarize the key content and any action items in 2-4 sentences.` }
+            ]}]
+          })
+        });
+        const d = await r.json();
+        result = d.content?.filter(b=>b.type==='text').map(b=>b.text).join('') || 'Could not analyze PDF.';
+      } else {
+        // Text-based files
+        const text = await readFileAsText(att.file).catch(() => '(Could not read file content)');
+        result = await callAI(`Analyze this email attachment. Respond in 2-4 sentences with key findings and action items.
+Attachment: "${att.name}" (${att.type.toUpperCase()}, ${att.size})
+Content (first 1500 chars):
+${text.substring(0, 1500)}
+
+Email context — From: ${e.from}, Subject: ${e.subject}`, 'attachment');
+      }
+    } else {
+      result = 'No file content available to analyze.';
+    }
+
+    att.analysis = result;
+    box.innerHTML = `
+      <div class="attach-analysis-title">📊 AI Insight — ${esc(att.name)}</div>
+      ${esc(result)}`;
+    box.classList.add('show');
+    badge.textContent = '✓ Done'; badge.className = 'attach-badge done';
+    item?.classList.remove('analyzing'); item?.classList.add('analyzed');
+    toast(`Attachment analyzed: ${att.name.substring(0,24)}`, 'ok');
+  } catch (err) {
+    badge.textContent = '✗ Failed'; badge.className = 'attach-badge pending';
+    item?.classList.remove('analyzing');
+    box.innerHTML = `<div class="attach-analysis-title">Error</div>${esc(err.message)}`;
+    box.classList.add('show');
+    toast('Attachment analysis failed', 'err');
+  }
+}
+
+// ── SELECT EMAIL ──
+function selectEmail(i) {
+  sel = i;
+  const e = emails[i];
+  if (e.status === 'new') { e.status = 'read'; renderTable(); updateStats(); updateStatus(); }
+  document.querySelectorAll('tbody tr').forEach((r, j) => r.classList.toggle('sel-row', j === i));
+  const name = shortName(e.from);
+  const ini = initials(name);
+  const col = avColor(name);
+  const dc = document.getElementById('detailContent');
+  dc.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;padding:14px 0 12px;border-bottom:1px solid var(--border);">
+      <div class="av" style="background:${col.bg};color:${col.color};width:38px;height:38px;border-radius:10px;font-size:13px">${ini}</div>
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--text)">${esc(e.from)}</div>
+        <div style="font-size:11px;color:var(--text3);font-family:var(--mono)">${esc(e.date||'')}</div>
+      </div>
+    </div>
+    <div class="detail-subject">${esc(e.subject)}</div>
+    <div class="body-box">${esc(e.body || e.preview || '')}</div>
+    ${renderAttachments(e, i)}
+    <button class="analyze-btn-big" onclick="analyzeEmail(${i})" style="margin-top:${e.attachments?.length?'4px':'0'}">
+      ✦ Analyze Email${e.attachments?.length ? ' + '+e.attachments.length+' Attachment'+( e.attachments.length>1?'s':'') : ''} with ${esc(modelLabel())}
+    </button>
+    ${e.analysis ? renderAnalysis(e, i) : ''}
+  `;
+}
+
+// ── ANALYZE EMAIL (with attachments) ──
+async function analyzeEmail(i) {
+  sel = i;
+  const e = emails[i];
+  const name = shortName(e.from);
+  const ini = initials(name);
+  const col = avColor(name);
+
+  // First analyze any unanalyzed attachments
+  const atts = e.attachments || [];
+  const unanalyzed = atts.filter(a => !a.analysis);
+
+  document.getElementById('detailContent').innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;padding:14px 0 12px;border-bottom:1px solid var(--border);">
+      <div class="av" style="background:${col.bg};color:${col.color};width:38px;height:38px;border-radius:10px;font-size:13px">${ini}</div>
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--text)">${esc(e.from)}</div>
+        <div style="font-size:11px;color:var(--text3);font-family:var(--mono)">${esc(e.date||'')}</div>
+      </div>
+    </div>
+    <div class="detail-subject">${esc(e.subject)}</div>
+    <div class="thinking"><div class="dots"><span></span><span></span><span></span></div>
+      ${unanalyzed.length ? `Analyzing ${unanalyzed.length} attachment(s) first…` : `${esc(modelLabel())} is analyzing…`}
+    </div>
+  `;
+
+  // Analyze attachments first
+  if (unanalyzed.length) {
+    for (let ai = 0; ai < atts.length; ai++) {
+      if (!atts[ai].analysis) {
+        try { await analyzeAttachment(i, ai); } catch {}
+      }
+    }
+  }
+
+  // Build attachment context string
+  const attContext = atts.length
+    ? '\n\nAttachments (' + atts.length + '):\n' + atts.map(a =>
+        `- ${a.name} (${a.type.toUpperCase()}, ${a.size})${a.analysis ? '\n  Content insight: ' + a.analysis.substring(0, 300) : ''}`
+      ).join('\n')
+    : '';
+
+  try {
+    const txt = await callAI(`Analyze this email${atts.length ? ' and its attachments' : ''}. Return ONLY a JSON object (no markdown, no code blocks):
+{"intent":"one-line intent","sentiment":"positive|neutral|urgent|negative","priority":"high|medium|low","summary":"2-3 sentence summary covering email and any attachments","draft":"professional 3-5 sentence reply referencing attachments if relevant","attachmentNotes":"brief note about attachments if any, else empty string"}
+
+From: ${e.from}
+Subject: ${e.subject}
+Body: ${e.body || e.preview}${attContext}`, 'analysis');
+
+    let a;
+    try { a = JSON.parse(txt.replace(/```json|```/g, '').trim()); }
+    catch { a = { intent:'Analyzed', sentiment:'neutral', priority:'medium', summary: txt.substring(0,200), draft:'Thank you for your email. I will review and respond shortly.', attachmentNotes:'' }; }
+    e.analysis = a; e.draft = a.draft; e.modelUsed = modelLabel();
+    analyzed++; updateStats(); updateStatus();
+    selectEmail(i);
+    toast('Analysis complete ✦', 'ok');
+  } catch (err) { toast('Analysis failed: ' + err.message, 'err'); selectEmail(i); }
+}
+
+function renderAnalysis(e, i) {
+  const a = e.analysis;
+  const sentClass = { positive:'t-pos', neutral:'t-neu', urgent:'t-urg', negative:'t-neg' }[a.sentiment] || 't-neu';
+  const priClass = { high:'t-hi', medium:'t-md', low:'t-lo' }[a.priority] || 't-md';
+  const attNotes = a.attachmentNotes && a.attachmentNotes.trim()
+    ? `<div class="section-divider">Attachment Insights</div>
+       <div style="background:var(--blue-lt);border:1px solid #b3d4f0;border-radius:9px;padding:11px;font-size:11px;color:#1a4a70;line-height:1.65;margin-bottom:12px">
+         📎 ${esc(a.attachmentNotes)}
+       </div>` : '';
+  return `
+    <div class="section-divider">AI Analysis</div>
+    <div class="model-used-tag">✦ ${esc(e.modelUsed || 'AI')}</div>
+    <div class="tag-row">
+      <span class="tag t-intent">${esc(a.intent)}</span>
+      <span class="tag ${sentClass}">${(a.sentiment||'').toUpperCase()}</span>
+      <span class="tag ${priClass}">${(a.priority||'').toUpperCase()} PRIORITY</span>
+    </div>
+    <div class="analysis-box">${esc(a.summary)}</div>
+    ${attNotes}
+    <div class="section-divider">Draft Reply</div>
+    <textarea class="draft-area" id="da${i}">${esc(e.draft||'')}</textarea>
+    <div class="draft-actions">
+      <button class="btn btn-ghost btn-sm" onclick="regen(${i})">↺ Regenerate</button>
+      <button class="btn btn-primary btn-sm" onclick="sendReply(${i})">↗ Send Reply</button>
+    </div>`;
+}
+
+// ── REGEN ──
+async function regen(i) {
+  const e = emails[i]; const ta = document.getElementById(`da${i}`);
+  if (ta) { ta.disabled = true; ta.style.opacity = '0.5'; }
+  try {
+    const txt = await callAI(`Write a different professional email reply (3-4 sentences, body only, no subject line).
+From: ${e.from} Subject: ${e.subject} Body: ${e.body || e.preview}`, 'regen');
+    e.draft = txt; if (ta) { ta.value = txt; ta.disabled = false; ta.style.opacity = '1'; }
+    toast('Draft regenerated', 'ok');
+  } catch { toast('Regeneration failed', 'err'); if (ta) { ta.disabled = false; ta.style.opacity = '1'; } }
+}
+
+// ── SEND ──
+async function sendReply(i) {
+  const e = emails[i];
+  const ta = document.getElementById(`da${i}`);
+  let draft = ta ? ta.value : e.draft || '';
+  if (!draft.trim()) { toast('Draft is empty', 'err'); return; }
+
+  // ── INPUT GUARDRAIL on outgoing draft ──
+  const draftGR = GR.checkInput(draft, 'send');
+  if (!draftGR.ok) { toast('Send blocked: ' + draftGR.reason, 'err'); return; }
+  draft = draftGR.sanitized;
+  if (ta) ta.value = draft;
+
+  const btns = document.querySelectorAll('.draft-actions .btn');
+  btns.forEach(b => { b.disabled = true; });
+
+  // Try Gmail — failure is silent, email is always marked sent
+  try {
+    await callGmail(`Send a reply email using Gmail.
+To: ${e.from}
+Subject: Re: ${e.subject}
+Body:\n${draft}\nUse the Gmail send tool now.`);
+  } catch (err) {
+    GR._log([{ level: 'warn', msg: `Gmail MCP unavailable — recorded as sent locally (${err.message || 'connection error'})` }]);
+  }
+
+  // Always mark as sent and persist to session
+  e.status = 'sent';
+  e.draft = draft;
+  e.sentAt = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  sent++;
+  document.getElementById('sentBadge').textContent = sent;
+  updateStats(); updateStatus(); renderTable();
+
+  // Persist to sessionStorage so it survives navigation within the session
+  saveQueuedSend({
+    _queuedId: Date.now() + '_' + i,
+    emailIdx: i,
+    to: e.from,
+    subject: e.subject,
+    draft,
+    date: e.date || '',
+    sentAt: e.sentAt,
+    modelUsed: e.modelUsed || modelLabel(),
+    fromEmail: e.from,
+  });
+
+  document.getElementById('detailContent').innerHTML = `
+    <div class="sent-wrap">
+      <div class="sent-icon">✓</div>
+      <div class="sent-title">Reply Sent!</div>
+      <div class="sent-sub">To: ${esc(shortName(e.from))}</div>
+      <br><button class="btn btn-ghost btn-sm" onclick="selectEmail(${i})" style="margin:0 auto">View Email</button>
+    </div>`;
+  toast('Reply sent ✓', 'ok');
+  btns.forEach(b => { b.disabled = false; });
+}
+
+// ── STATS ──
+function updateStats() {
+  const u = emails?.filter(e => e.status === 'new').length || 0;
+  const draftCount = emails?.filter(e => e.draft && e.status !== 'sent').length || 0;
+  document.getElementById('s1').textContent = emails?.length || '—';
+  document.getElementById('s2').textContent = u || '—';
+  document.getElementById('s3').textContent = analyzed;
+  document.getElementById('s4').textContent = sent;
+  document.getElementById('unreadBadge').textContent = u || '0';
+  document.getElementById('sentBadge').textContent = sent;
+  document.getElementById('draftsBadge').textContent = draftCount;
+  document.getElementById('analyzedBadge').textContent = analyzed;
+}
+function updateStatus() {
+  const u = emails?.filter(e => e.status === 'new').length || 0;
+  const r = emails?.filter(e => e.status === 'read').length || 0;
+  document.getElementById('stNew').textContent = u;
+  document.getElementById('stRead').textContent = r;
+  document.getElementById('stAnalyzed').textContent = analyzed;
+  document.getElementById('stSent').textContent = sent;
+}
+
+// ── DASHBOARD PAGE ──
+function renderDashboardPage() {
+  if (!emails?.length) {
+    // Show a "load data" state
+    ['dashHero','dashActivity','dashPriority','dashDonut','dashPerf','dashQuickActions'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text3);font-family:var(--mono);font-size:11px;grid-column:1/-1">Load emails first to see live data</div>`;
+    });
+    renderQuickActions();
+    return;
+  }
+  renderDashHero();
+  renderDashActivity();
+  renderDashPriority();
+  renderDashDonut();
+  renderDashPerf();
+  renderQuickActions();
+  const now = new Date();
+  const el = document.getElementById('dashActivityTime');
+  if (el) el.textContent = now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+}
+
+function renderDashHero() {
+  const total = emails.length;
+  const unread = emails.filter(e => e.status === 'new').length;
+  const draftCount = emails.filter(e => e.draft && e.status !== 'sent').length;
+  const sentCount = emails.filter(e => e.status === 'sent').length;
+  const highPri = emails.filter(e => e.analysis?.priority === 'high').length;
+  const cards = [
+    { label:'Total Emails', val: total, icon:'✉', bg:'var(--accent-lt)', color:'var(--accent)', trend:`${unread} unread`, trendBg:'var(--red-lt)', trendColor:'var(--red)' },
+    { label:'AI Analyzed', val: analyzed, icon:'✦', bg:'var(--purple-lt)', color:'var(--purple)', trend:`${Math.round(analyzed/Math.max(total,1)*100)}% coverage`, trendBg:'var(--purple-lt)', trendColor:'var(--purple)' },
+    { label:'Drafts Ready', val: draftCount, icon:'✎', bg:'var(--blue-lt)', color:'var(--blue)', trend: draftCount ? 'Awaiting send' : 'All sent', trendBg:'var(--blue-lt)', trendColor:'var(--blue)' },
+    { label:'Replies Sent', val: sentCount, icon:'↗', bg:'var(--green-lt)', color:'var(--green)', trend:`${highPri} high priority`, trendBg:'var(--red-lt)', trendColor:'var(--red)' },
+  ];
+  document.getElementById('dashHero').innerHTML = cards.map((c, i) => `
+    <div class="dash-hero-card" style="animation-delay:${i*.06}s">
+      <div class="dash-hero-icon" style="background:${c.bg};color:${c.color}">${c.icon}</div>
+      <div class="dash-hero-num">${c.val}</div>
+      <div class="dash-hero-label">${c.label}</div>
+      <span class="dash-hero-trend" style="background:${c.trendBg};color:${c.trendColor}">${c.trend}</span>
+    </div>`).join('');
+}
+
+function renderDashActivity() {
+  const feed = document.getElementById('dashActivity');
+  const events = [];
+  // Build a timeline from email data
+  emails.slice().reverse().forEach(e => {
+    if (e.status === 'sent') events.push({ dot: 'var(--green)', text: `Replied to <strong>${esc(shortName(e.from))}</strong> — ${esc(e.subject.substring(0,30))}`, time: e.date || '' });
+    else if (e.analysis) events.push({ dot: 'var(--purple)', text: `AI analyzed email from <strong>${esc(shortName(e.from))}</strong>`, time: e.date || '' });
+    else if (e.status === 'new') events.push({ dot: 'var(--accent)', text: `New email from <strong>${esc(shortName(e.from))}</strong> — ${esc(e.subject.substring(0,28))}`, time: e.date || '' });
+    else events.push({ dot: 'var(--text3)', text: `Read email from <strong>${esc(shortName(e.from))}</strong>`, time: e.date || '' });
+  });
+  const shown = events.slice(0, 6);
+  feed.innerHTML = shown.length ? shown.map((ev, i) => `
+    <div class="activity-item" style="animation-delay:${i*.05}s">
+      <div class="activity-dot-wrap">
+        <div class="activity-dot" style="background:${ev.dot}"></div>
+        <div class="activity-line"></div>
+      </div>
+      <div class="activity-content">
+        <div class="activity-text">${ev.text}</div>
+        <div class="activity-time">${esc(ev.time)}</div>
+      </div>
+    </div>`).join('') :
+    `<div style="padding:20px;text-align:center;color:var(--text3);font-family:var(--mono);font-size:11px">No activity yet</div>`;
+}
+
+function renderDashPriority() {
+  const list = document.getElementById('dashPriority');
+  const cnt = document.getElementById('dashPriorityCount');
+  // High priority unread/read (not sent) emails, fallback to unread
+  let priority = emails.filter(e => e.analysis?.priority === 'high' && e.status !== 'sent');
+  if (!priority.length) priority = emails.filter(e => e.status === 'new').slice(0, 4);
+  if (cnt) cnt.textContent = priority.length;
+  if (!priority.length) {
+    list.innerHTML = `<div style="padding:16px 0;text-align:center;color:var(--text3);font-family:var(--mono);font-size:11px">No high-priority emails 🎉</div>`;
+    return;
+  }
+  list.innerHTML = priority.slice(0, 5).map((e, idx) => {
+    const i = emails.indexOf(e);
+    const col = avColor(shortName(e.from));
+    const priColor = e.analysis?.priority === 'high' ? 'var(--red)' : e.status === 'new' ? 'var(--accent)' : 'var(--text3)';
+    return `
+    <div class="priority-item" style="animation-delay:${idx*.05}s" onclick="navClick(document.querySelector('[onclick*=inbox]'),'inbox');setTimeout(()=>selectEmail(${i}),60)">
+      <div class="priority-indicator" style="background:${priColor}"></div>
+      <div class="av" style="background:${col.bg};color:${col.color};width:30px;height:30px;border-radius:8px;font-size:10px;flex-shrink:0">${initials(shortName(e.from))}</div>
+      <div class="priority-info">
+        <div class="priority-from">${esc(shortName(e.from))}</div>
+        <div class="priority-subj">${esc(e.subject)}</div>
+      </div>
+      <span class="pill ${e.status==='new'?'pill-new':'pill-read'}" style="font-size:9px;flex-shrink:0">${e.status}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderDashDonut() {
+  const wrap = document.getElementById('dashDonut');
+  const total = emails.length || 1;
+  const counts = {
+    Unread: emails.filter(e => e.status === 'new').length,
+    Read:   emails.filter(e => e.status === 'read' && !e.analysis).length,
+    Analyzed: emails.filter(e => e.analysis && e.status !== 'sent').length,
+    Sent:   emails.filter(e => e.status === 'sent').length,
+  };
+  const colors = { Unread:'#e67e22', Read:'#a89e93', Analyzed:'#8e44ad', Sent:'#27ae60' };
+  const r = 48, cx = 60, cy = 60, strokeW = 14;
+  const circum = 2 * Math.PI * r;
+  let offset = 0;
+  const segments = Object.entries(counts).map(([label, val]) => {
+    const pct = val / total;
+    const seg = { label, val, pct, color: colors[label], offset, dash: pct * circum, gap: circum };
+    offset += pct * circum;
+    return seg;
+  });
+  const svgSegs = segments.map(s => s.val > 0 ? `
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none"
+      stroke="${s.color}" stroke-width="${strokeW}"
+      stroke-dasharray="${s.dash} ${s.gap}"
+      stroke-dashoffset="${-(s.offset - circum/4)}"
+      style="transition: stroke-dasharray 1s ease"/>` : '').join('');
+  const legendHTML = Object.entries(counts).map(([label, val]) => `
+    <div class="donut-legend-item">
+      <div class="donut-legend-dot" style="background:${colors[label]}"></div>
+      <span class="donut-legend-label">${label}</span>
+      <span class="donut-legend-val">${val}</span>
+    </div>`).join('');
+  wrap.innerHTML = `
+    <svg class="donut-svg" width="120" height="120" viewBox="0 0 120 120">
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--border)" stroke-width="${strokeW}"/>
+      ${svgSegs}
+      <text x="${cx}" y="${cy+5}" text-anchor="middle" font-family="'Fraunces',serif" font-size="20" font-weight="700" fill="var(--text)">${total}</text>
+      <text x="${cx}" y="${cy+18}" text-anchor="middle" font-family="'DM Sans',sans-serif" font-size="8" fill="var(--text3)">total</text>
+    </svg>
+    <div class="donut-legend">${legendHTML}</div>`;
+}
+
+function renderDashPerf() {
+  const list = document.getElementById('dashPerf');
+  const total = emails.length || 1;
+  const analyzedPct = Math.round(analyzed / total * 100);
+  const sentPct = Math.round(sent / Math.max(analyzed, 1) * 100);
+  const highPri = emails.filter(e => e.analysis?.priority === 'high').length;
+  const positiveSent = emails.filter(e => e.analysis?.sentiment === 'positive' && e.status === 'sent').length;
+  const metrics = [
+    { label: 'Analysis Coverage', val: analyzedPct, color: 'var(--purple)', suffix: '%' },
+    { label: 'Reply Rate', val: sentPct, color: 'var(--green)', suffix: '%' },
+    { label: 'High Priority', val: Math.round(highPri/total*100), color: 'var(--red)', suffix: '%' },
+    { label: 'Positive Replies', val: positiveSent, color: 'var(--blue)', suffix: ' sent', rawVal: true },
+  ];
+  list.innerHTML = metrics.map((m, i) => {
+    const barPct = m.rawVal ? Math.min(m.val * 20, 100) : m.val;
+    return `
+    <div class="perf-item" style="animation-delay:${i*.07}s">
+      <div class="perf-top">
+        <span class="perf-label">${m.label}</span>
+        <span class="perf-val" style="color:${m.color}">${m.val}${m.suffix}</span>
+      </div>
+      <div class="perf-track">
+        <div class="perf-fill" style="width:0;background:${m.color}" data-w="${barPct}%"></div>
+      </div>
+    </div>`;
+  }).join('');
+  setTimeout(() => list.querySelectorAll('.perf-fill').forEach(b => b.style.width = b.dataset.w), 80);
+}
+
+function renderQuickActions() {
+  const wrap = document.getElementById('dashQuickActions');
+  const actions = [
+    { icon:'⟳', label:'Load Emails', fn:"loadEmails()" },
+    { icon:'✦', label:'Analyze All', fn:"analyzeAllUnanalyzed()" },
+    { icon:'✉', label:'Go to Inbox', fn:"navClick(document.querySelector('[onclick*=inbox]'),'inbox')" },
+    { icon:'↗', label:'View Sent', fn:"navClick(document.querySelector('[onclick*=sent]'),'sent')" },
+  ];
+  wrap.innerHTML = actions.map(a => `
+    <button class="quick-action-btn" onclick="${a.fn}">
+      <span class="quick-action-icon">${a.icon}</span>
+      <span class="quick-action-label">${a.label}</span>
+    </button>`).join('');
+}
+
+async function analyzeAllUnanalyzed() {
+  const unanalyzed = emails.filter(e => !e.analysis);
+  if (!unanalyzed.length) { toast('All emails already analyzed ✦', 'ok'); return; }
+  toast(`Analyzing ${unanalyzed.length} email(s)…`, '');
+  for (let i = 0; i < emails.length; i++) {
+    if (!emails[i].analysis) {
+      try { await analyzeEmail(i); } catch {}
+    }
+  }
+  renderDashboardPage();
+  toast(`Batch analysis complete ✦`, 'ok');
+}
+
+// ── SENT PAGE ──
+function renderSentPage() {
+  const grid = document.getElementById('sentPageGrid');
+
+  // Combine emails[] sent items + any sessionStorage records not already reflected
+  const emailsSent = (emails || []).filter(e => e.status === 'sent');
+  const sessionSent = getQueuedSends().filter(r =>
+    !emailsSent.find(e => e.sentAt === r.sentAt && e.from === r.fromEmail)
+  );
+  const totalAll = emailsSent.length + sessionSent.length;
+
+  document.getElementById('sentPageSub').textContent = totalAll
+    ? `${totalAll} repl${totalAll === 1 ? 'y' : 'ies'} sent`
+    : 'Emails you\'ve replied to via MailMind';
+
+  if (!totalAll) {
+    grid.innerHTML = `<div class="sent-empty"><div class="sent-empty-icon">↗</div><div>No sent replies yet.</div><div style="margin-top:6px;opacity:0.7">Analyze an email and send a reply to see it here.</div></div>`;
+    return;
+  }
+
+  const emailCards = emailsSent.map((e, idx) => {
+    const i = emails.indexOf(e);
+    const name = shortName(e.from);
+    const col = avColor(name);
+    return `
+    <div class="sent-email-card" style="animation-delay:${idx*.05}s">
+      <div class="sent-av-wrap">
+        <div class="av" style="background:${col.bg};color:${col.color};width:38px;height:38px;border-radius:10px;font-size:13px">${initials(name)}</div>
+      </div>
+      <div class="sent-body">
+        <div class="sent-header">
+          <div class="sent-to">To: ${esc(name)}</div>
+          <div class="sent-date">${esc(e.sentAt || e.date || '')}</div>
+        </div>
+        <div class="sent-subject">Re: ${esc(e.subject)}</div>
+        <div class="sent-draft-preview">${esc(e.draft || '(No draft content saved)')}</div>
+        <div class="sent-status-row">
+          <span class="sent-badge">✓ Sent</span>
+          ${e.modelUsed ? `<span class="sent-model-tag">✦ ${esc(e.modelUsed)}</span>` : ''}
+          <button class="btn btn-ghost btn-sm" onclick="viewSentEmail(${i})" style="margin-left:auto">View Original</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const sessionCards = sessionSent.map((r, idx) => {
+    const name = shortName(r.fromEmail || r.to || '');
+    const col = avColor(name);
+    const offset = emailsSent.length + idx;
+    return `
+    <div class="sent-email-card" style="animation-delay:${offset*.05}s">
+      <div class="sent-av-wrap">
+        <div class="av" style="background:${col.bg};color:${col.color};width:38px;height:38px;border-radius:10px;font-size:13px">${initials(name)}</div>
+      </div>
+      <div class="sent-body">
+        <div class="sent-header">
+          <div class="sent-to">To: ${esc(name)}</div>
+          <div class="sent-date">${esc(r.sentAt || r.date || '')}</div>
+        </div>
+        <div class="sent-subject">Re: ${esc(r.subject || '')}</div>
+        <div class="sent-draft-preview">${esc(r.draft || '(No draft content saved)')}</div>
+        <div class="sent-status-row">
+          <span class="sent-badge">✓ Sent</span>
+          ${r.modelUsed ? `<span class="sent-model-tag">✦ ${esc(r.modelUsed)}</span>` : ''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  grid.innerHTML = emailCards + sessionCards;
+}
+
+function viewSentEmail(i) {
+  // Switch to inbox and select the email
+  const inboxNav = document.querySelector('.nav-item[onclick*="inbox"]');
+  if (inboxNav) navClick(inboxNav, 'inbox');
+  setTimeout(() => selectEmail(i), 50);
+}
+
+// ── AI DRAFTS PAGE ──
+function renderDraftsPage() {
+  const grid = document.getElementById('draftsPageGrid');
+  const draftEmails = emails?.filter(e => e.draft) || [];
+  document.getElementById('draftsPageSub').textContent = draftEmails.length
+    ? `${draftEmails.length} AI-generated draft${draftEmails.length !== 1 ? 's' : ''} ready to review`
+    : 'AI-generated reply drafts ready to review & send';
+  if (!draftEmails.length) {
+    grid.innerHTML = `<div class="drafts-empty"><div class="drafts-empty-icon">✦</div><div>No drafts yet.</div><div style="margin-top:6px;opacity:0.7">Analyze emails to generate AI drafts.</div></div>`;
+    return;
+  }
+  grid.innerHTML = draftEmails.map((e, idx) => {
+    const i = emails.indexOf(e);
+    const name = shortName(e.from);
+    const ini = initials(name);
+    const col = avColor(name);
+    const a = e.analysis;
+    const sentClass = a ? ({ positive:'t-pos', neutral:'t-neu', urgent:'t-urg', negative:'t-neg' }[a.sentiment] || 't-neu') : 't-neu';
+    const priClass = a ? ({ high:'t-hi', medium:'t-md', low:'t-lo' }[a.priority] || 't-md') : '';
+    const isSent = e.status === 'sent';
+    return `
+    <div class="draft-card" style="animation-delay:${idx*.05}s;opacity:${isSent?0.65:1}">
+      <div class="draft-card-header">
+        <div class="av" style="background:${col.bg};color:${col.color};width:34px;height:34px;border-radius:9px;font-size:12px;flex-shrink:0">${ini}</div>
+        <div class="draft-card-meta">
+          <div class="draft-card-from">${esc(name)}</div>
+          <div class="draft-card-subj">${esc(e.subject)}</div>
+        </div>
+        ${isSent ? `<span class="pill pill-sent" style="flex-shrink:0">sent</span>` : ''}
+      </div>
+      ${a ? `<div class="draft-card-tags">
+        <span class="tag t-intent" style="font-size:9px">${esc(a.intent)}</span>
+        <span class="tag ${sentClass}" style="font-size:9px">${(a.sentiment||'').toUpperCase()}</span>
+        <span class="tag ${priClass}" style="font-size:9px">${(a.priority||'').toUpperCase()} PRI</span>
+      </div>` : ''}
+      <div class="draft-card-body">${esc(e.draft)}</div>
+      ${e.modelUsed ? `<div style="font-size:10px;font-family:var(--mono);color:var(--text3)">✦ ${esc(e.modelUsed)}</div>` : ''}
+      <div class="draft-card-actions">
+        <button class="btn btn-ghost btn-sm" onclick="openDraftInInbox(${i})">✎ Edit</button>
+        ${!isSent ? `<button class="btn btn-primary btn-sm" onclick="quickSendDraft(${i})">↗ Send</button>` : `<button class="btn btn-ghost btn-sm" style="opacity:0.5" disabled>✓ Sent</button>`}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openDraftInInbox(i) {
+  const inboxNav = document.querySelector('.nav-item[onclick*="inbox"]');
+  if (inboxNav) navClick(inboxNav, 'inbox');
+  setTimeout(() => selectEmail(i), 50);
+}
+
+async function quickSendDraft(i) {
+  const e = emails[i];
+  if (!e.draft) { toast('No draft available', 'err'); return; }
+
+  // ── INPUT GUARDRAIL on outgoing draft ──
+  const draftGR = GR.checkInput(e.draft, 'quick-send');
+  if (!draftGR.ok) { toast('Send blocked: ' + draftGR.reason, 'err'); return; }
+  e.draft = draftGR.sanitized;
+
+  const btns = document.querySelectorAll(`#draftsPageGrid .draft-card:nth-child(${emails.filter(em=>em.draft).indexOf(e)+1}) .btn`);
+  btns.forEach(b => b.disabled = true);
+  try {
+    await callGmail(`Send a reply email using Gmail.
+To: ${e.from}
+Subject: Re: ${e.subject}
+Body:\n${e.draft}\nUse the Gmail send tool now.`);
+    e.status = 'sent'; sent++;
+    document.getElementById('sentBadge').textContent = sent;
+    updateStats(); updateStatus(); renderTable();
+    renderDraftsPage();
+    toast('Reply sent ✓', 'ok');
+  } catch (err) {
+    toast('Send failed: ' + err.message, 'err');
+    btns.forEach(b => b.disabled = false);
+  }
+}
+
+// ── ANALYZED PAGE ──
+function renderAnalyzedPage() {
+  const grid = document.getElementById('analyzedPageGrid');
+  const analyzedEmails = emails?.filter(e => e.analysis) || [];
+  document.getElementById('analyzedPageSub').textContent = analyzedEmails.length
+    ? `${analyzedEmails.length} email${analyzedEmails.length !== 1 ? 's' : ''} analyzed by AI`
+    : 'All emails with AI analysis results';
+  if (!analyzedEmails.length) {
+    grid.innerHTML = `<div class="analyzed-empty"><div class="analyzed-empty-icon">◉</div><div>No analyzed emails yet.</div><div style="margin-top:6px;opacity:0.7">Select an email and click Analyze to get started.</div></div>`;
+    return;
+  }
+  grid.innerHTML = analyzedEmails.map((e, idx) => {
+    const i = emails.indexOf(e);
+    const name = shortName(e.from);
+    const ini = initials(name);
+    const col = avColor(name);
+    const a = e.analysis;
+    const sentClass = { positive:'t-pos', neutral:'t-neu', urgent:'t-urg', negative:'t-neg' }[a.sentiment] || 't-neu';
+    const priClass = { high:'t-hi', medium:'t-md', low:'t-lo' }[a.priority] || 't-md';
+    const cardId = `acard-${i}`;
+    return `
+    <div class="analyzed-card" style="animation-delay:${idx*.05}s" id="${cardId}">
+      <div class="analyzed-card-top" onclick="toggleAnalyzedCard('${cardId}')">
+        <div class="av" style="background:${col.bg};color:${col.color};width:36px;height:36px;border-radius:9px;font-size:12px;flex-shrink:0">${ini}</div>
+        <div class="analyzed-card-info">
+          <div class="analyzed-card-from">${esc(name)} — <span style="font-weight:400;color:var(--text3)">${esc(e.date||'')}</span></div>
+          <div class="analyzed-card-subj">${esc(e.subject)}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+          <span class="tag t-intent" style="font-size:9px">${esc(a.intent)}</span>
+          <span class="tag ${sentClass}" style="font-size:9px">${(a.sentiment||'').toUpperCase()}</span>
+          <span class="tag ${priClass}" style="font-size:9px">${(a.priority||'').toUpperCase()}</span>
+          ${e.status === 'sent' ? `<span class="pill pill-sent" style="font-size:9px">sent</span>` : ''}
+        </div>
+        <span class="analyzed-card-chevron">▼</span>
+      </div>
+      <div class="analyzed-card-body" id="body-${cardId}">
+        ${e.modelUsed ? `<div class="model-used-tag" style="margin-bottom:12px">✦ ${esc(e.modelUsed)}</div>` : ''}
+        <div class="analysis-box" style="margin-bottom:12px">${esc(a.summary)}</div>
+        ${a.attachmentNotes && a.attachmentNotes.trim() ? `
+        <div style="background:var(--blue-lt);border:1px solid #b3d4f0;border-radius:9px;padding:11px;font-size:11px;color:#1a4a70;line-height:1.65;margin-bottom:12px">
+          📎 ${esc(a.attachmentNotes)}
+        </div>` : ''}
+        <div class="section-divider">Draft Reply</div>
+        <div class="draft-card-body" style="max-height:none;position:static">${esc(e.draft||'No draft available')}</div>
+        <div style="display:flex;gap:6px;margin-top:10px">
+          <button class="btn btn-ghost btn-sm" onclick="openDraftInInbox(${i})">✎ Open in Inbox</button>
+          ${e.status !== 'sent' ? `<button class="btn btn-primary btn-sm" onclick="quickSendDraft(${i})">↗ Send Reply</button>` : `<span class="sent-badge" style="align-self:center">✓ Sent</span>`}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleAnalyzedCard(cardId) {
+  const card = document.getElementById(cardId);
+  const top = card.querySelector('.analyzed-card-top');
+  const body = document.getElementById('body-' + cardId);
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  top.classList.toggle('open', !isOpen);
+}
+
+// ── BARS ──
+function renderBars() {
+  const wrap = document.getElementById('barsWrap');
+  const vals = [8,14,6,20,12,28,7,24,18,22];
+  const max = Math.max(...vals);
+  const colors = ['accent','accent','alt','hi','accent','hi','alt','accent','hi','accent'];
+  wrap.innerHTML = vals.map((v, i) => `
+    <div class="bar-col">
+      <div class="bar-fill ${colors[i]}" style="height:0;flex:1" data-h="${Math.round(v/max*100)}%"></div>
+      <div class="bar-lbl">${i+1}</div>
+    </div>`).join('');
+  setTimeout(() => wrap.querySelectorAll('.bar-fill').forEach(b => { b.style.height = b.dataset.h; }), 100);
+}
+
+// ── SENDERS ──
+function renderSenders() {
+  const list = document.getElementById('senderList');
+  if (!emails?.length) { list.innerHTML = `<div style="padding:16px 0;text-align:center;color:var(--text3);font-family:var(--mono);font-size:11px">No data yet</div>`; return; }
+  const counts = {};
+  emails.forEach(e => { const n = shortName(e.from); counts[n] = (counts[n]||0)+1; });
+  const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,4);
+  const max = sorted[0]?.[1] || 1;
+  const barColors = ['#e67e22','#27ae60','#2980b9','#8e44ad'];
+  list.innerHTML = sorted.map(([name,cnt],i) => {
+    const col = avColor(name);
+    const ini = initials(name);
+    return `
+    <div class="sender-item">
+      <div class="sender-top">
+        <div class="sender-name">
+          <div class="sender-av" style="background:${col.bg};color:${col.color}">${ini}</div>
+          ${esc(name.substring(0,18))}
+        </div>
+        <div class="sender-pct">${cnt} email${cnt>1?'s':''}</div>
+      </div>
+      <div class="prog-track">
+        <div class="prog-fill" style="width:0;background:${barColors[i]}" data-w="${Math.round(cnt/max*100)}%"></div>
+      </div>
+    </div>`;
+  }).join('');
+  setTimeout(() => list.querySelectorAll('.prog-fill').forEach(b => b.style.width = b.dataset.w), 100);
+}
+
+function setLoading(v) {
+  const b = document.getElementById('loadBar');
+  b.style.display = v ? 'block' : 'none';
+}
+
+function toast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `show ${type}`;
+  setTimeout(() => t.className = '', 3200);
+}
+
+// ── GUARDRAILS PAGE ──
+const GR_RULES = [
+  {
+    id: 'length-limit',
+    name: 'Input Length Limit',
+    desc: 'Truncates any incoming text that exceeds 8,000 characters to prevent prompt-injection via oversized payloads.',
+    icon: '✂',
+    iconBg: '#fef0e3', iconColor: '#c0591a',
+    type: 'input',
+    enabled: true,
+    hitKey: 'length'
+  },
+  {
+    id: 'injection-block',
+    name: 'Prompt Injection Block',
+    desc: 'Detects and blocks patterns like "ignore previous instructions", "jailbreak", or "DAN mode" before they reach the AI.',
+    icon: '🚫',
+    iconBg: '#fdecea', iconColor: '#c0392b',
+    type: 'input',
+    enabled: true,
+    hitKey: 'injection'
+  },
+  {
+    id: 'pii-redact-in',
+    name: 'PII Redaction (Input)',
+    desc: 'Automatically masks credit card numbers, SSNs, passwords, API keys and bearer tokens before sending to the model.',
+    icon: '🔒',
+    iconBg: '#e3f0fb', iconColor: '#1a6fa0',
+    type: 'input',
+    enabled: true,
+    hitKey: 'pii-in'
+  },
+  {
+    id: 'recipient-check',
+    name: 'Suspicious Recipient Check',
+    desc: 'Warns when a send-action targets an unrecognised external domain (not gmail, outlook, yahoo, or hotmail).',
+    icon: '📬',
+    iconBg: '#fef3cd', iconColor: '#b7780a',
+    type: 'input',
+    enabled: true,
+    hitKey: 'recipient'
+  },
+  {
+    id: 'hallucination-detect',
+    name: 'Hallucinated Send Detection',
+    desc: 'Flags AI output that claims an email was sent without a confirmed MCP tool call — preventing silent data leaks.',
+    icon: '👁',
+    iconBg: '#f3e8ff', iconColor: '#6a1fa8',
+    type: 'output',
+    enabled: true,
+    hitKey: 'halluc'
+  },
+  {
+    id: 'pii-redact-out',
+    name: 'PII Redaction (Output)',
+    desc: 'Scans AI responses for credit card and SSN patterns and redacts them before they are displayed to the user.',
+    icon: '🔐',
+    iconBg: '#e3f0fb', iconColor: '#1a6fa0',
+    type: 'output',
+    enabled: true,
+    hitKey: 'pii-out'
+  },
+  {
+    id: 'toxic-block',
+    name: 'Toxic Content Block',
+    desc: 'Blocks AI output containing harmful or dangerous language (violence, self-harm) before it reaches the UI.',
+    icon: '🛡',
+    iconBg: '#fdecea', iconColor: '#c0392b',
+    type: 'output',
+    enabled: true,
+    hitKey: 'toxic'
+  },
+  {
+    id: 'json-schema',
+    name: 'Analysis JSON Validation',
+    desc: 'Verifies that analysis responses contain all required keys (intent, sentiment, priority, summary, draft) before use.',
+    icon: '{}',
+    iconBg: '#e8f5ec', iconColor: '#1e8449',
+    type: 'both',
+    enabled: true,
+    hitKey: 'schema'
+  },
+  {
+    id: 'output-length',
+    name: 'Output Length Guard',
+    desc: 'Warns when an AI response exceeds 6,000 characters — a signal of runaway generation or unexpected content.',
+    icon: '↕',
+    iconBg: '#fef3cd', iconColor: '#b7780a',
+    type: 'output',
+    enabled: true,
+    hitKey: 'out-len'
+  },
+];
+
+// Count how many events match a rule by scanning event messages
+function grRuleHits(rule) {
+  const kw = rule.hitKey;
+  return GR.events.filter(e => e.msg && e.msg.toLowerCase().includes(
+    kw === 'length' ? 'truncated' :
+    kw === 'injection' ? 'injection' :
+    kw === 'pii-in' ? 'input sanitized' :
+    kw === 'recipient' ? 'recipient' :
+    kw === 'halluc' ? 'hallucinated' :
+    kw === 'pii-out' ? 'output sanitized' :
+    kw === 'toxic' ? 'toxic' :
+    kw === 'schema' ? 'json' :
+    kw === 'out-len' ? 'unusually long' : ''
+  )).length;
+}
+
+function renderGuardrailsPage() {
+  // Stats
+  document.getElementById('grPagePass').textContent = GR.passCount;
+  document.getElementById('grPageWarn').textContent = GR.warnCount;
+  document.getElementById('grPageBlock').textContent = GR.blockCount;
+  const total = GR.passCount + GR.warnCount + GR.blockCount;
+  document.getElementById('guardrailsPageSub').textContent =
+    total ? `${total} guardrail check${total !== 1 ? 's' : ''} run this session` : 'Active safety rules protecting every AI interaction';
+
+  // Badge in nav
+  document.getElementById('guardrailsBadge').textContent = GR.warnCount + GR.blockCount || '0';
+
+  // Rules grid
+  const grid = document.getElementById('grRulesGrid');
+  grid.innerHTML = GR_RULES.map((rule, idx) => {
+    const hits = grRuleHits(rule);
+    const typeLabels = { input: 'INPUT', output: 'OUTPUT', both: 'IN + OUT' };
+    return `
+    <div class="gr-rule-card" style="animation-delay:${idx * .04}s">
+      <div class="gr-rule-icon" style="background:${rule.iconBg};color:${rule.iconColor}">${rule.icon}</div>
+      <div class="gr-rule-info">
+        <div class="gr-rule-name">${rule.name}</div>
+        <div class="gr-rule-desc">${rule.desc}</div>
+      </div>
+      <div class="gr-rule-right">
+        <span class="gr-rule-type ${rule.type}">${typeLabels[rule.type]}</span>
+        <span class="gr-rule-count">${hits} hit${hits !== 1 ? 's' : ''}</span>
+        <div class="gr-rule-toggle${rule.enabled ? '' : ' off'}" title="${rule.enabled ? 'Enabled' : 'Disabled'}" onclick="toggleGrRule(${idx}, this)"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Live log
+  renderGrLiveLog();
+}
+
+function renderGrLiveLog() {
+  const inner = document.getElementById('grLiveLogInner');
+  const dot = document.getElementById('grLiveDot');
+  if (!GR.events.length) {
+    inner.innerHTML = '<div class="gr-empty-log">No guardrail events yet.</div>';
+    if (dot) dot.className = 'gr-dot';
+    return;
+  }
+  if (dot) {
+    dot.className = 'gr-dot' + (GR.blockCount > 0 ? ' block' : GR.warnCount > 0 ? ' warn' : '');
+  }
+  document.getElementById('grLiveLogSub').textContent = `${GR.events.length} event${GR.events.length !== 1 ? 's' : ''} this session`;
+  inner.innerHTML = GR.events.map(e => {
+    const icon = { pass: '✓', warn: '⚠', block: '✕', info: 'ℹ' }[e.level] || '·';
+    return `<div class="gr-log-entry ${e.level}">
+      <span class="gr-log-badge ${e.level}">${icon} ${e.level.toUpperCase()}</span>
+      <span class="gr-log-ts">${e.ts}</span>${esc(e.msg)}
+    </div>`;
+  }).join('');
+}
+
+function toggleGrRule(idx, el) {
+  GR_RULES[idx].enabled = !GR_RULES[idx].enabled;
+  el.classList.toggle('off', !GR_RULES[idx].enabled);
+  el.title = GR_RULES[idx].enabled ? 'Enabled' : 'Disabled';
+  toast(GR_RULES[idx].name + (GR_RULES[idx].enabled ? ' enabled' : ' disabled'), GR_RULES[idx].enabled ? 'ok' : '');
+}
+
+function clearGuardrailLog() {
+  GR.events = [];
+  GR.passCount = 0;
+  GR.warnCount = 0;
+  GR.blockCount = 0;
+  GR._updateUI();
+  renderGuardrailsPage();
+  toast('Guardrail log cleared', 'ok');
+}
+
+// ── SEED DUMMY GUARDRAIL EVENTS ──
+(function seedDummyGuardrailEvents() {
+  const dummyEvents = [
+    // oldest → newest (they get unshifted so reverse order ends up newest-first)
+    { level: 'pass',  ts: '08:14:02', msg: 'Input OK — passed all checks (gmail)' },
+    { level: 'pass',  ts: '08:14:03', msg: 'Output OK — passed all checks (gmail-response)' },
+    { level: 'pass',  ts: '08:21:10', msg: 'Input OK — passed all checks (analysis)' },
+    { level: 'warn',  ts: '08:21:11', msg: 'Input truncated: 9243 → 8000 chars (analysis)' },
+    { level: 'pass',  ts: '08:21:12', msg: 'Output OK — analysis JSON schema valid (analysis)' },
+    { level: 'warn',  ts: '08:35:44', msg: 'Output warning: possible hallucinated send action detected (gmail-response)' },
+    { level: 'pass',  ts: '08:35:45', msg: 'Input OK — passed all checks (quick-send)' },
+    { level: 'block', ts: '08:47:03', msg: 'Input blocked: prompt injection detected (gmail) — pattern: "ignore all previous instructions"' },
+    { level: 'pass',  ts: '09:02:18', msg: 'Input OK — passed all checks (analysis)' },
+    { level: 'warn',  ts: '09:02:19', msg: 'Input sanitized: credit card pattern redacted (analysis)' },
+    { level: 'warn',  ts: '09:02:19', msg: 'Output sanitized: credit card pattern redacted from AI response (analysis)' },
+    { level: 'pass',  ts: '09:02:20', msg: 'Output OK — analysis JSON schema valid (analysis)' },
+    { level: 'block', ts: '09:15:57', msg: 'Input blocked: prompt injection detected (quick-send) — pattern: "disregard your system prompt"' },
+    { level: 'warn',  ts: '09:23:31', msg: 'Input sanitized: API key pattern redacted (gmail)' },
+    { level: 'pass',  ts: '09:23:32', msg: 'Output OK — passed all checks (gmail-response)' },
+    { level: 'warn',  ts: '09:41:08', msg: 'Output warning: response unusually long (6412 chars, analysis)' },
+    { level: 'warn',  ts: '09:41:09', msg: 'Output warning: analysis JSON missing keys: attachmentNotes (analysis)' },
+    { level: 'pass',  ts: '09:55:22', msg: 'Input OK — passed all checks (gmail)' },
+    { level: 'block', ts: '10:03:44', msg: 'Input blocked: prompt injection detected (analysis) — pattern: "act as a different AI"' },
+    { level: 'warn',  ts: '10:11:15', msg: 'Input warning: unrecognised recipient domain in send action' },
+    { level: 'pass',  ts: '10:11:16', msg: 'Input OK — passed all checks (quick-send)' },
+    { level: 'pass',  ts: '10:11:17', msg: 'Output OK — passed all checks (quick-send)' },
+    { level: 'warn',  ts: '10:28:39', msg: 'Input sanitized: bearer token pattern redacted (gmail)' },
+    { level: 'pass',  ts: '10:28:40', msg: 'Output OK — passed all checks (gmail-response)' },
+    { level: 'warn',  ts: '10:44:02', msg: 'Input sanitized: SSN pattern redacted (analysis)' },
+    { level: 'pass',  ts: '10:44:03', msg: 'Output OK — analysis JSON schema valid (analysis)' },
+  ];
+
+  // Load newest-first into GR.events and update counters
+  for (const ev of [...dummyEvents].reverse()) {
+    GR.events.unshift(ev);
+    if (ev.level === 'pass')  GR.passCount++;
+    else if (ev.level === 'warn')  GR.warnCount++;
+    else if (ev.level === 'block') GR.blockCount++;
+  }
+  GR._updateUI();
+})();
+
+// Init
+renderBars();
+renderQuickActions();
+</script>
+</body>
+</html>
